@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <title>Privacy Policy | Library System</title>
+    <link rel="stylesheet" th:href="@{/css/pages/privacy.css}">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components/footer.css}">
+    <link rel="stylesheet" th:href="@{/css/components/toolbar.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/pages/privacy.css}">
+
+    <script th:src="@{/js/jwt-token.js}"></script>
+</head>
+<body>
+
+<div th:replace="~{fragments/toolbar :: header}"></div>
+
+<main class="privacy-policy">
+    <div class="container">
+        <h1 class="page-title">Privacy Policy</h1>
+        <div class="effective-date">
+            Effective: <span th:text="${#temporals.format(#temporals.createNow(), 'MMMM dd, yyyy')}"></span>
+        </div>
+
+        <section class="policy-section">
+            <h2>1. Information We Collect</h2>
+            <p>We collect the following information when you use our services:</p>
+            <ul>
+                <li><strong>Account Information:</strong> Name, email, username, and password during registration</li>
+                <li><strong>Usage Data:</strong> Books checked out, search history, and reading preferences</li>
+                <li><strong>Device Information:</strong> IP address, browser type, and operating system</li>
+            </ul>
+        </section>
+
+        <section class="policy-section">
+            <h2>2. How We Use Your Information</h2>
+            <p>Your data helps us:</p>
+            <ul>
+                <li>Provide and maintain library services</li>
+                <li>Notify you about due dates and reservations</li>
+                <li>Improve our system and user experience</li>
+                <li>Comply with legal obligations</li>
+            </ul>
+        </section>
+
+        <section class="policy-section">
+            <h2>3. Data Protection</h2>
+            <p>We implement security measures including:</p>
+            <ul>
+                <li>Encryption of sensitive data</li>
+                <li>Regular security audits</li>
+                <li>Access controls to personal information</li>
+            </ul>
+        </section>
+
+        <section class="policy-section">
+            <h2>4. Third-Party Services</h2>
+            <p>We may use these trusted services:</p>
+            <ul>
+                <li>Google Analytics for usage statistics (anonymous data)</li>
+                <li>Email service providers for notifications</li>
+            </ul>
+        </section>
+
+        <section class="policy-section">
+            <h2>5. Your Rights</h2>
+            <p>You can:</p>
+            <ul>
+                <li>Request access to your personal data</li>
+                <li>Ask for corrections to inaccurate information</li>
+                <li>Delete your account (except records required by law)</li>
+            </ul>
+            <p>Contact <strong>admin@admin.com</strong> to exercise these rights.</p>
+        </section>
+
+        <section class="policy-section">
+            <h2>6. Changes to This Policy</h2>
+            <p>We'll notify users of significant changes via email or system notice.</p>
+        </section>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script th:src="@{/js/toolbar.js}"></script>
+<script th:src="@{/js/profile-avatar.js}"></script>
+<script th:src="@{/js/api-protected-endpoint.js}"></script>
+
+</body>
+</html>

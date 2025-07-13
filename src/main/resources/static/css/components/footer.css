@@ -1,0 +1,79 @@
+/* css/components/footer.css */
+.footer {
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    color: var(--light-color);
+    padding: 20px 0;
+    text-align: center;
+    position: fixed; /* Changed from relative to fixed */
+    bottom: 0; /* Stick to bottom */
+    left: 0;
+    right: 0;
+    z-index: 998;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+    transition: var(--transition);
+}
+
+/* Add this to your base.css or main layout CSS */
+body {
+    padding-bottom: 80px; /* Adjust this value based on your footer height */
+    min-height: 100vh;
+    position: relative;
+}
+
+/* The rest of your existing footer styles can remain the same */
+.footer .container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.footer p {
+    margin: 0;
+    font-size: 0.9rem;
+}
+
+.footer-links {
+    display: flex;
+    gap: 20px;
+}
+
+.footer-link {
+    color: var(--light-color);
+    opacity: 0.8;
+    transition: var(--transition);
+    font-size: 0.9rem;
+}
+
+.footer-link:hover {
+    opacity: 1;
+    transform: translateY(-2px);
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+@media (max-width: 768px) {
+    .footer .container {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .footer-links {
+        gap: 15px;
+    }
+}/* Alternative for non-fixed but always-at-bottom footer */
+ body {
+     display: flex;
+     flex-direction: column;
+     min-height: 100vh;
+ }
+
+ main {
+     flex: 1;
+ }
+
+ .footer {
+     /* Keep your existing styles but remove position: fixed */
+     margin-top: auto; /* Pushes footer to bottom */
+ }

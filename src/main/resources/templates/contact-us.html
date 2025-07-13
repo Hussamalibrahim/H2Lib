@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <title>Contact Us | Library System</title>
+    <link rel="stylesheet" th:href="@{/css/components/toolbar.css}">
+    <link rel="stylesheet" th:href="@{/css/components/footer.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/contact.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+
+    <script th:src="@{/js/jwt-token.js}"></script>
+</head>
+<body>
+<div th:replace="~{fragments/toolbar :: header}"></div>
+
+<main th:fragment="main">
+    <div class="contact-container">
+        <div class="contact-header">
+            <h1><i class="fas fa-envelope"></i> Contact Us</h1>
+            <p>Have questions or feedback? We'd love to hear from you!</p>
+        </div>
+
+        <div class="contact-content">
+            <div class="contact-info">
+                <div class="info-card">
+                    <i class="fas fa-envelope"></i>
+                    <h3>Email Us</h3>
+                    <p>For general inquiries:</p>
+                    <a th:href="'mailto:hussamgimalcomebr@gmail.com'">hussamgimalcomebr@gmail.com</a>
+                </div>
+
+                <div class="info-card">
+                    <i class="fas fa-phone"></i>
+                    <h3>Call Us</h3>
+                    <p>Monday - Friday, 9am - 5pm</p>
+                    <a href="tel:+0999999999">+0999999999</a>
+                </div>
+
+                <div class="info-card">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <h3>Support us</h3>
+                    <p>ITE information technology In Damascus</p>
+                    <p>Instagram: la bla la</p>
+                </div>
+            </div>
+
+            <div class="contact-form">
+                <h2><i class="fas fa-paper-plane"></i> Send Us a Message</h2>
+                <form th:action="@{/contact}" method="post">
+                    <div class="form-group">
+                        <label for="name">Your Name</label>
+                        <input type="text" id="name" name="name" required th:value="${name}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Your Email</label>
+                        <input type="email" id="email" name="email" required th:value="${email}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="subject">Subject</label>
+                        <input type="text" id="subject" name="subject" required th:value="${subject}">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message">Message</label>
+                        <textarea id="message" name="message" rows="5" required th:text="${message}"></textarea>
+                    </div>
+
+                    <button type="submit" class="btn primary">
+                        <i class="fas fa-paper-plane"></i> Send Message
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script th:src="@{/js/contact.js}"></script>
+<script th:src="@{/js/toolbar.js}"></script>
+<script th:src="@{/js/api-protected-endpoint.js}"></script>
+<script th:src="@{/js/profile-avatar.js}"></script>
+</body>
+</html>

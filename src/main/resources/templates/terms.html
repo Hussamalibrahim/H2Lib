@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <title>Terms of Service | Library System</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" th:href="@{/css/components/footer.css}">
+    <link rel="stylesheet" th:href="@{/css/components/toolbar.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/terms.css}">
+
+    <script th:src="@{/js/jwt-token.js}"></script>
+</head>
+<body>
+
+<div th:replace="~{fragments/toolbar :: header}"></div>
+
+<main class="terms-page">
+    <div class="container">
+        <h1 class="page-title">Terms of Service</h1>
+        <div class="last-updated">
+            Last Updated: <span th:text="${#temporals.format(#temporals.createNow(), 'MMMM dd, yyyy')}"></span>
+        </div>
+
+        <section class="terms-section">
+            <h2>1. Acceptance of Terms</h2>
+            <p>By accessing or using the Library Management System ("Service"), you agree to be bound by these Terms of Service ("ToS").</p>
+        </section>
+
+        <section class="terms-section">
+            <h2>2. User Responsibilities</h2>
+            <p>You agree to:</p>
+            <ul>
+                <li>Provide accurate registration information</li>
+                <li>Maintain the confidentiality of your account credentials</li>
+                <li>Not engage in unauthorized use of library resources</li>
+                <li>Comply with all applicable laws and library policies</li>
+            </ul>
+        </section>
+
+        <section class="terms-section">
+            <h2>3. Intellectual Property</h2>
+            <p>All digital content provided through this Service is protected by copyright law. Unauthorized distribution is prohibited.</p>
+        </section>
+
+        <section class="terms-section">
+            <h2>4. Privacy</h2>
+            <p>Your use of the Service is governed by our <a th:href="@{/privacy}">Privacy Policy</a>.</p>
+        </section>
+
+        <section class="terms-section">
+            <h2>5. Contact Us</h2>
+            <p>For questions about these Terms, contact: <strong>hussamgimalcomebr@gmail.com</strong></p>
+        </section>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+
+<script th:src="@{/js/toolbar.js}"></script>
+<script th:src="@{/js/api-protected-endpoint.js}"></script>
+<script th:src="@{/js/profile-avatar.js}"></script>
+</body>
+</html>

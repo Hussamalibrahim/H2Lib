@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>413 Payload Too Large</title>
+  <link rel="stylesheet" th:href="@{/css/errorStyle.css}">
+</head>
+<body>
+<div class="error-container error-413">
+  <div class="error-icon">📏</div>
+  <h1>413</h1>
+  <h2>File Too Large</h2>
+  <p th:text="${message} ?: 'The file you tried to upload exceeds the maximum allowed size'"></p>
+
+  <div th:if="${maxSize}" class="error-details">
+    <p>Maximum allowed size: <span th:text="${maxSize}"></span></p>
+  </div>
+
+  <div class="error-actions">
+    <a th:href="@{/upload}" class="error-btn primary">Upload Page</a>
+    <a href="/" class="error-btn secondary">Home</a>
+  </div>
+</div>
+</body>
+</html>

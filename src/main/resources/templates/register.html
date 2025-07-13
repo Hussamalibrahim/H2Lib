@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <title>Register</title>
+    <link rel="stylesheet" th:href="@{/css/components/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/components/toolbar.css}">
+    <link rel="stylesheet" th:href="@{/css/components/footer.css}">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="auth-page">
+
+<header class="toolbar" id="main-toolbar">
+    <div class="toolbar-content">
+        <a th:href="@{/}" class="toolbar-logo">
+            <i class="fas fa-book-open"></i>
+            <span>Library</span>
+        </a>
+    </div>
+</header>
+
+<div class="auth-container">
+    <div class="auth-card">
+        <h1>Register</h1>
+        <a th:href="@{/oauth2/authorization/github}" class="btn-auth btn-auth-github">
+            <i class="fab fa-github"></i> Continue with GitHub
+        </a>
+
+        <div class="divider">
+            <span>or</span>
+        </div>
+
+        <div th:if="${param.error}" class="alert alert-danger">
+            <span th:text="${param.error}">Error message</span>
+        </div>
+
+        <form id="registerForm" th:action="@{/register-back}" method="post" novalidate>
+            <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+
+            <div class="form-group">
+                <label for="registerName">Full Name</label>
+                <input type="text" id="registerName" name="name" required
+                       aria-describedby="nameError"
+                       placeholder="Enter your full name">
+                <div id="nameError" class="error-message" role="alert"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="registerEmail">Email</label>
+                <input type="email" id="registerEmail" name="email" required
+                       aria-describedby="emailError"
+                       placeholder="Enter your email">
+                <div id="emailError" class="error-message" role="alert"></div>
+            </div>
+
+            <div class="form-group">
+                <label for="registerPassword">Password</label>
+                <input type="password" id="registerPassword" name="password" required
+                       aria-describedby="passwordError strengthFeedback"
+                       placeholder="Create a password"
+                       pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$">
+                <div class="password-strength">
+                    <div class="strength-meter" aria-hidden="true"></div>
+                    <div id="strengthFeedback" class="strength-feedback" role="alert"></div>
+                </div>
+                <div id="passwordError" class="error-message" role="alert">
+                    Password must be at least 8 characters with uppercase, lowercase, number and special character
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="registerConfirmPassword">Confirm Password</label>
+                <input type="password" id="registerConfirmPassword" name="confirmPassword" required
+                       aria-describedby="confirmError"
+                       placeholder="Confirm your password">
+                <div id="confirmError" class="error-message" role="alert"></div>
+            </div>
+
+            <div class="auth-actions">
+                <button type="submit" class="btn-auth btn-auth-primary">
+                    <span class="button-text">Create Account</span>
+                    <span class="button-loader" aria-hidden="true">
+                        <i class="fas fa-spinner fa-spin"></i>
+                    </span>
+                </button>
+            </div>
+        </form>
+
+        <div class="auth-link">
+            <span>Already have an account?</span>
+            <a th:href="@{/login}" class="switch-to-login">Login</a>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script th:src="@{/js/auth.js}"></script>
+</body>
+</html>

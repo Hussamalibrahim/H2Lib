@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>415 Unsupported Media Type</title>
+    <link rel="stylesheet" th:href="@{/css/errorStyle.css}">
+</head>
+<body>
+<div class="error-container error-415">
+    <div class="error-icon">📁</div>
+    <h1>415</h1>
+    <h2>Unsupported Media Type</h2>
+    <p th:text="${message} ?: 'The server doesn\'t support the media type in the request'"></p>
+
+    <div th:if="${supportedTypes}" class="error-details">
+        <p>Supported content types:</p>
+        <ul>
+            <li th:each="type : ${supportedTypes}" th:text="${type}"></li>
+        </ul>
+    </div>
+
+    <div class="error-actions">
+        <a href="/" class="error-btn primary">Home</a>
+        <a href="javascript:history.back()" class="error-btn secondary">Try Again</a>
+    </div>
+</div>
+</body>
+</html>

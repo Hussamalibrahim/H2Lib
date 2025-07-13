@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>401 Unauthorized</title>
+    <link rel="stylesheet" th:href="@{/css/errorStyle.css}">
+</head>
+<body>
+<div class="error-container">
+    <div class="error-icon">🔒</div>
+    <h1>401</h1>
+    <h2>Unauthorized Access</h2>
+    <p>You don't have permission to view this page. Please log in with valid credentials.</p>
+
+    <p th:if="${errorMessage}" th:text="${errorMessage}" class="text-muted"></p>
+
+    <div>
+        <a href="/login" class="btn">Go to Login Page</a>
+        <a href="/" class="btn btn-secondary">Back to Home</a>
+    </div>
+</div>
+</body>
+</html>

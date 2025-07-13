@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="">
+<head>
+    <title>File Upload Error</title>
+    <link rel="stylesheet" th:href="@{/css/errorStyle.css}">
+</head>
+<body>
+<div class="error-container">
+    <h1>File Upload Failed</h1>
+    <div class="alert alert-danger" th:text="${error.message}"></div>
+
+    <div th:if="${allowedExtensions}">
+        <p>Allowed file types:</p>
+        <ul>
+            <li th:each="ext : ${allowedExtensions}" th:text="${ext}"></li>
+        </ul>
+    </div>
+
+    <a th:href="@{/upload}" class="btn">Try Again</a>
+</div>
+</body>
+</html>

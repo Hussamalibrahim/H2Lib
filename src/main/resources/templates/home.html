@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html xmlns:th="https://www.thymeleaf.org" lang="en">
+<head>
+    <title>Home</title>
+    <link rel="stylesheet" th:href="@{/css/components/toolbar.css}">
+    <link rel="stylesheet" th:href="@{/css/components/sidebar.css}">
+    <link rel="stylesheet" th:href="@{/css/components/book.css}">
+    <link rel="stylesheet" th:href="@{/css/components/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/components/footer.css}">
+    <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/pages/home.css}">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <meta charset="UTF-8">
+    <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <script th:src="@{/js/jwt-token.js}"></script>
+</head>
+<body>
+
+<div th:replace="~{fragments/toolbar :: header}"></div>
+
+<main th:fragment="main">
+    <aside class="sidebar">
+        <h3>Categories</h3>
+
+        <div class="category-list">
+            <a th:each="category : ${categories}"
+               th:href="@{/(category=${category.name})}"
+               class="category-item"
+               th:classappend="${selectedCategory == category.name} ? 'active'">
+                <span th:text="${category.name}"></span>
+                <span class="category-count" th:text="${category.bookCount}"></span>
+            </a>
+        </div>
+    </aside>
+
+    <div class="main-content">
+        <!-- Empty State -->
+        <div th:if="${books == null or books.empty}" class="empty-state">
+            <div class="empty-icon">📚</div>
+            <h3>No Books Found</h3>
+            <p>We couldn't find any books matching your criteria.</p>
+        </div>
+
+        <!-- Book Content -->
+        <div th:unless="${books == null or books.empty}">
+            <div class="book-grid">
+                <div th:each="book : ${books.content}" class="book-card">
+                    <div class="book-rating">
+                        <div class="precise-rating"
+                             th:with="rating=${book.ratingAvg},
+                             totalStars=5,
+                             fullStars=T(java.lang.Math).floor(rating),
+                             remainder=rating % 1,
+                             ratingFormatted=${#numbers.formatDecimal(rating, 1, 2)}">
+
+                            <div class="stars-container">
+                                <!-- Full Stars -->
+                                <span th:each="i : ${#numbers.sequence(1, fullStars)}">
+                                    <div class="star">
+                                        <div class="star-fill full"></div>
+                                    </div>
+                                </span>
+
+                                <!-- Partial Star -->
+                                <span th:if="${fullStars < totalStars}">
+                                    <div class="star">
+                                        <div class="star-fill partial"
+                                             th:style="'width:' + ${remainder * 100} + '%'"></div>
+                                    </div>
+                                </span>
+
+                                <!-- Empty Stars -->
+                                <span th:each="i : ${#numbers.sequence(fullStars + 1 + (remainder > 0 ? 1 : 0), totalStars)}">
+                                    <div class="star">
+                                        <div class="star-fill empty"></div>
+                                    </div>
+                                </span>
+                            </div>
+
+                            <div class="rating-text">
+                                <span class="rating-value" th:text="${ratingFormatted}"></span>
+                                <span class="rating-count" th:text="'(' + ${book.ratingNumber} + ')'"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="book-cover">
+                        <img th:src="@{${book.imageCoverDirectLink}}" alt="Book Cover"
+                             th:onclick="|window.location.href='/product/details/' + ${book.id}|">
+                    </div>
+
+                    <div class="book-info">
+                        <h3 th:text="${book.bookTitle}"
+                            th:onclick="|window.location.href='/product/details/' + ${book.id}|"></h3>
+
+                        <a th:href="@{/author/{id}(id=${book.authorKey})}" class="author-link">
+                            <p class="author" th:text="${book.authorName}"></p>
+                        </a>
+
+                        <div class="divider"></div>
+
+                        <div class="book-actions">
+                            <button class="btn primary">Download</button>
+                            <button class="btn secondary"
+                                    th:onclick="|window.location.href='/product/details/' + ${book.id}|">
+                                Details
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="pagination" th:unless="${books.totalPages <= 1}">
+                <a th:href="@{/(page=${currentPage - 1}, category=${selectedCategory})}"
+                   th:if="${!books.first}" class="btn pagination-btn">
+                    <i class="fas fa-chevron-left"></i> Previous
+                </a>
+                <span class="page-info">
+                    Page [[${currentPage + 1}]] of [[${books.totalPages}]]
+                </span>
+                <a th:href="@{/(page=${currentPage + 1}, category=${selectedCategory})}"
+                   th:if="${!books.last}" class="btn pagination-btn">
+                    Next <i class="fas fa-chevron-right"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+
+<script th:src="@{/js/toolbar.js}"></script>
+<script th:src="@{/js/profile-avatar.js}"></script>
+<script th:src="@{/js/api-protected-endpoint.js}"></script>
+
+</body>
+</html>

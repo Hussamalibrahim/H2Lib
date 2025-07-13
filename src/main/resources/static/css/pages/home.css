@@ -1,0 +1,80 @@
+/* Update the pagination section in home.css */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 30px;
+}
+
+.pagination-btn {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
+    border-radius: 4px;
+    color: var(--light-color);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: var(--shadow-sm);
+}
+
+.pagination-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    opacity: 0.9;
+}
+
+.pagination-btn:disabled {
+    background: var(--gray-medium);
+    cursor: not-allowed;
+    transform: none !important;
+    box-shadow: none !important;
+}
+
+.page-info {
+    color: var(--gray-dark);
+    padding: 8px 16px;
+    background: var(--gray-light);
+    border-radius: 4px;
+}
+/* Empty State Styles */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 40px 20px;
+    background-color: var(--light-color);
+    border-radius: 8px;
+    box-shadow: var(--shadow-sm);
+    margin: 20px auto;
+    max-width: 500px;
+    width: 100%;
+}
+
+.empty-icon {
+    font-size: 64px;
+    margin-bottom: 20px;
+    color: var(--primary-color);
+}
+
+.empty-state h3 {
+    font-size: 24px;
+    color: var(--dark-color);
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    font-size: 16px;
+    color: var(--gray-dark);
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.empty-state .btn {
+    margin-top: 15px;
+    padding: 10px 24px;
+    font-size: 16px;
+}

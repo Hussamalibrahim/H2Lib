@@ -1,0 +1,209 @@
+/* Error Pages */
+.error-container {
+    max-width: 800px;
+    margin: 5rem auto;
+    padding: 3rem;
+    text-align: center;
+    background: var(--light-color);
+    border-radius: 12px;
+    box-shadow: var(--shadow-md);
+    position: relative;
+    overflow: hidden;
+}
+
+.error-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5px;
+}.error-details {
+     margin-top: 2rem;
+     text-align: left;
+     background: #f8f9fa;
+     padding: 1rem;
+     border-radius: 4px;
+ }
+
+.error-401::before { background: var(--error-color); }
+.error-403::before { background: var(--warning-color); }
+.error-404::before { background: var(--gray-dark); }
+.error-500::before { background: var(--error-color); }
+
+.error-container h1 {
+    font-size: 6rem;
+    font-weight: 700;
+    margin: 1rem 0;
+    color: var(--dark-color);
+    line-height: 1;
+}
+
+.error-container h2 {
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    color: var(--gray-dark);
+    font-weight: 500;
+}
+
+.error-container p {
+    font-size: 1.1rem;
+    margin-bottom: 2.5rem;
+    color: var(--dark-color);
+}
+
+.error-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-top: 2rem;
+}
+
+.error-btn {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    font-weight: 500;
+    transition: var(--transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.error-btn.primary {
+    background: var(--primary-color);
+    color: var(--light-color);
+}
+
+.error-btn.secondary {
+    background: var(--light-color);
+    color: var(--primary-color);
+    border: 1px solid var(--primary-color);
+}.error-icon {
+     font-size: 3rem;
+     margin-bottom: 1rem;
+ }
+
+
+.error-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-sm);
+}
+
+.error-details {
+    background: rgba(0,0,0,0.03);
+    border-radius: 6px;
+    padding: 1rem;
+    margin: 2rem 0;
+    text-align: left;
+    font-family: monospace;
+    font-size: 0.9rem;
+    border-left: 3px solid var(--error-color);
+}
+
+@media (max-width: 768px) {
+    .error-container {
+        padding: 2rem 1.5rem;
+        margin: 2rem 1rem;
+    }
+
+    .error-container h1 {
+        font-size: 4rem;
+    }
+
+    .error-actions {
+        flex-direction: column;
+    }
+}
+/* Additional Error Types */
+.error-400::before { background: var(--warning-color); }
+.error-405::before { background: var(--info-color); }
+.error-415::before { background: var(--purple); }
+.error-413::before { background: var(--orange); }
+
+/* Countdown Styles */
+.countdown-container {
+    margin: 2rem 0;
+}
+.progress-bar {
+    width: 100%;
+    height: 6px;
+    background: #e9ecef;
+    border-radius: 3px;
+    margin-top: 0.5rem;
+    overflow: hidden;
+}
+.progress {
+    height: 100%;
+    background: var(--primary-color);
+    width: 100%;
+    transition: width 1s linear;
+}
+
+.countdown {
+    background: rgba(255, 107, 107, 0.1);
+    padding: 1rem 1.5rem;
+    border-radius: 50px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+.countdown-number {
+    font-weight: bold;
+    color: #ff6b6b;
+    font-size: 1.5rem;
+}
+.instructions {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin: 1.5rem 0;
+    text-align: left;
+}
+.instructions h3 {
+    margin-top: 0;
+    color: #495057;
+}
+.lock-icon {
+    font-size: 4rem;
+    color: #ff6b6b;
+    margin-bottom: 1rem;
+}
+.error-423::before {
+    background: #ff6b6b;
+}
+
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+}
+
+
+
+.countdown-number {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #ff6b6b;
+}
+
+.instructions {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin: 2rem 0;
+    text-align: left;
+}
+
+.instructions h3 {
+    margin-top: 0;
+    color: #495057;
+}
+
+.instructions ul {
+    padding-left: 1.5rem;
+}
+
+.instructions li {
+    margin-bottom: 0.5rem;
+}

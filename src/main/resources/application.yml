@@ -1,0 +1,75 @@
+spring:
+  jmx:
+    enabled: true
+
+  aop:
+    auto: true
+    proxy-target-class: true
+
+  thymeleaf:
+    cache: false
+  # my sql connection
+  datasource:
+    url: jdbc:mysql://localhost:3306/DB_LIBRARY?createDatabaseIfNotExist=true
+    username: root
+    password:
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  security:
+    oauth2:
+      client:
+        registration:
+          github:
+            client-id: "${GITHUB_CLIENT_ID}"
+            client-secret: "${GITHUB_CLIENT_SECRET}"
+            authorization-grant-type: authorization_code
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: read:user,user:email
+        provider:
+          github:
+            authorization-uri: https://github.com/login/oauth/authorize
+            token-uri: https://github.com/login/oauth/access_token
+            user-info-uri: https://api.github.com/user
+            user-name-attribute: login
+
+  #hibernate
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+debug: true
+
+server:
+  port: 8443
+  ssl:
+    enabled: true
+    key-store: classpath:docs/keystore.p12
+    key-store-password: hussam
+    key-store-type: PKCS12
+    key-alias: hussam
+  http2:
+    enabled: true
+
+logging:
+  level:
+    org.springframework.security: DEBUG
+
+google:
+  drive:
+    root-folder: H2LIB
+    allowed-folders: ebooks,covers,profile-pictures
+    allowed-ebook-formats: pdf,epub+zip,mobi
+    max-ebook-size: 50MB
+    allowed-cover-formats: jpg,jpeg,webp,png
+    max-cover-size: 5MB
+    allowed-profile-picture-formats: jpg,jpeg,png,webp
+    max-profile-picture-size: 5MB

@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <title>Account Settings</title>
+    <link rel="stylesheet" th:href="@{/css/components/toolbar.css}">
+    <link rel="stylesheet" th:href="@{/css/components/footer.css}">
+    <link rel="stylesheet" th:href="@{/css/components/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/components/settings.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+<div th:replace="~{fragments/toolbar :: header}"></div>
+
+<main class="settings-container">
+    <h1 class="sr-only">Account Settings</h1>
+
+    <div class="settings-card">
+        <!-- Profile Picture Section -->
+        <section class="settings-section collapsible" aria-expanded="false">
+            <div class="section-header" tabindex="0" role="button" aria-controls="profile-section">
+                <h2><i class="fas fa-user-circle" aria-hidden="true"></i> Profile Picture</h2>
+                <i class="fas fa-chevron-right" aria-hidden="true"></i>
+            </div>
+            <div id="profile-section" class="section-content">
+                <div class="avatar-upload">
+                    <div class="avatar-preview"
+                         th:style="${user.imageUrl} ? 'background-image: url(' + ${user.imageUrl} + ')' : ''"
+                         aria-label="Current profile picture">
+                            <span th:if="!${user.imageUrl}"
+                                  th:text="${#strings.substring(user.username,0,1).toUpperCase()}"></span>
+                    </div>
+                    <div class="avatar-actions">
+                        <input type="file" id="avatarInput" accept="image/*" hidden
+                               aria-label="Upload new profile picture">
+                        <label for="avatarInput" class="btn-auth btn-auth-secondary">
+                            <i class="fas fa-upload" aria-hidden="true"></i> Upload New
+                        </label>
+                        <button class="btn-auth btn-auth-cancel" th:if="${user.imageUrl}"
+                                aria-label="Remove profile picture">
+                            <i class="fas fa-trash-alt" aria-hidden="true"></i> Remove
+                        </button>
+                    </div>
+                    <div class="upload-feedback" aria-live="polite"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Change Password Section -->
+        <section class="settings-section collapsible active" aria-expanded="true">
+            <div class="section-header" tabindex="0" role="button" aria-controls="password-section">
+                <h2><i class="fas fa-lock" aria-hidden="true"></i> Change Password</h2>
+                <i class="fas fa-chevron-down" aria-hidden="true"></i>
+            </div>
+            <div id="password-section" class="section-content">
+                <form id="passwordForm" novalidate>
+                    <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+
+                    <div class="form-group">
+                        <label for="currentPassword">Current Password</label>
+                        <input type="password" id="currentPassword" name="currentPassword" required
+                               aria-describedby="currentPasswordError">
+                        <div id="currentPasswordError" class="error-message" role="alert">
+                            Please enter your current password
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="newPassword">New Password</label>
+                        <input type="password" id="newPassword" name="newPassword" required
+                               aria-describedby="newPasswordError strengthFeedback"
+                               pattern="^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$">
+                        <div class="password-strength">
+                            <div class="strength-meter" aria-hidden="true"></div>
+                            <span id="strengthFeedback" class="strength-feedback"></span>
+                        </div>
+                        <div id="newPasswordError" class="error-message" role="alert">
+                            Password must be at least 8 characters with uppercase, lowercase, number and special character
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Confirm New Password</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" required
+                               aria-describedby="confirmPasswordError">
+                        <div id="confirmPasswordError" class="error-message" role="alert">
+                            Passwords must match
+                        </div>
+                    </div>
+
+                    <div class="auth-actions">
+                        <button type="submit" class="btn-auth btn-auth-primary">
+                            <i class="fas fa-key" aria-hidden="true"></i> Update Password
+                        </button>
+                        <div class="form-feedback" aria-live="polite"></div>
+                    </div>
+                </form>
+            </div>
+        </section>
+    </div>
+</main>
+
+<div th:replace="~{fragments/footer :: footer}"></div>
+
+<script th:src="@{/js/settings.js}"></script>
+<script th:src="@{/js/account-settings.js}"></script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+/* Enhanced Settings CSS */
+.settings-container {
+    max-width: 800px;
+    margin: 2rem auto;
+    padding: 0 20px;
+}
+
+.settings-card {
+    background: var(--light-color);
+    border-radius: 8px;
+    box-shadow: var(--shadow-md);
+    padding: 2rem;
+    margin-bottom: 2rem;
+}
+
+/* Collapsible Sections */
+.settings-section {
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    overflow: hidden;
+    border: 1px solid var(--gray-medium);
+    transition: all 0.3s ease;
+}
+
+.section-header {
+    padding: 1.2rem 1.5rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    background-color: var(--light-color);
+    transition: all 0.3s ease;
+}
+
+.section-header:hover,
+.section-header:focus {
+    background-color: var(--gray-light);
+    outline: 2px solid var(--primary-color);
+    outline-offset: -2px;
+}
+
+.section-header h2 {
+    margin: 0;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.section-header i {
+    transition: transform 0.3s ease;
+}
+
+.section-content {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    padding: 0 1.5rem;
+}
+
+/* Active state */
+.settings-section.active {
+    border-left: 4px solid var(--error-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.settings-section.active .section-header {
+    background-color: var(--gray-light);
+}
+
+.settings-section.active .section-header i.fa-chevron-right {
+    transform: rotate(90deg);
+}
+
+.settings-section.active .section-content {
+    max-height: 1000px;
+    padding: 1.5rem;
+}
+
+/* Avatar Upload */
+.avatar-upload {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 2rem;
+    margin-top: 1rem;
+}
+
+.avatar-preview {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background-color: var(--gray-medium);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: white;
+    background-size: cover;
+    background-position: center;
+    flex-shrink: 0;
+}
+
+.avatar-actions {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+/* Form Improvements */
+.form-group {
+    position: relative;
+    margin-bottom: 1.5rem;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--gray-medium);
+    border-radius: 4px;
+    transition: border 0.3s ease;
+}
+
+.form-group input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(var(--primary-color-rgb), 0.2);
+}
+
+/* Error states */
+.form-group.has-error input {
+    border-color: var(--error-color);
+}
+
+.form-group.has-error input:focus {
+    box-shadow: 0 0 0 2px rgba(var(--error-color-rgb), 0.2);
+}
+
+.error-message {
+    display: none;
+    color: var(--error-color);
+    font-size: 0.8rem;
+    margin-top: 0.3rem;
+}
+
+.form-group.has-error .error-message {
+    display: block;
+}
+
+/* Password Strength Meter */
+.password-strength {
+    margin-top: 0.5rem;
+}
+
+.strength-meter {
+    height: 6px;
+    background: var(--gray-medium);
+    border-radius: 3px;
+    margin-bottom: 0.3rem;
+    overflow: hidden;
+    position: relative;
+}
+
+.strength-meter::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    height: 100%;
+    width: 0;
+    background: var(--error-color);
+    transition: width 0.3s, background 0.3s;
+}
+
+/* Strength levels */
+.password-weak .strength-meter::after {
+    width: 25%;
+    background: var(--error-color);
+}
+
+.password-medium .strength-meter::after {
+    width: 50%;
+    background: orange;
+}
+
+.password-strong .strength-meter::after {
+    width: 75%;
+    background: var(--success-color);
+}
+
+.password-very-strong .strength-meter::after {
+    width: 100%;
+    background: darkgreen;
+}
+
+.strength-feedback {
+    font-size: 0.8rem;
+    display: block;
+}
+
+/* Feedback messages */
+.upload-feedback,
+.form-feedback {
+    margin-top: 1rem;
+    padding: 0.75rem;
+    border-radius: 4px;
+    width: 100%;
+}
+
+.upload-feedback.success,
+.form-feedback.success {
+    background-color: rgba(var(--success-color-rgb), 0.1);
+    color: var(--success-color);
+    border: 1px solid var(--success-color);
+}
+
+.upload-feedback.error,
+.form-feedback.error {
+    background-color: rgba(var(--error-color-rgb), 0.1);
+    color: var(--error-color);
+    border: 1px solid var(--error-color);
+}
+
+/* Accessibility */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;

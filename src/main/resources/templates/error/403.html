@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>403 Forbidden</title>
+  <link rel="stylesheet" th:href="@{/css/errorStyle.css}">
+</head>
+<body>
+<div class="error-container error-403">
+  <div class="error-icon">🚫</div>
+  <h1>403</h1>
+  <h2>Access Denied</h2>
+  <p th:text="${message} ?: 'You don\'t have permission to access this resource'"></p>
+
+  <div th:if="${path}" class="error-details">
+    <p>Attempted to access: <code th:text="${path}"></code></p>
+  </div>
+
+  <div class="error-actions">
+    <a th:href="@{/login}" class="error-btn primary">Login</a>
+    <a href="/" class="error-btn secondary">Home</a>
+  </div>
+</div>
+</body>
+</html>

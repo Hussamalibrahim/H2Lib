@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <title>Book Details</title>
+    <link rel="stylesheet" th:href="@{/css/pages/book-details.css}">
+</head>
+<body>
+<header th:replace="fragments/toolbar :: toolbar"></header>
+
+<main th:fragment="main">
+    <div class="main-container">
+        <aside class="sidebar">
+            <h3>All Book Types</h3>
+            <div class="category-list">
+                <a th:each="type : ${T(com.library.library.Enumerations.BookType).values()}"
+                   href="#" class="category-item">
+                    <span th:text="${type.name()}"></span>
+                </a>
+            </div>
+        </aside>
+
+        <main class="content">
+            <div class="book-details-container">
+                <!-- Other book details content... -->
+
+                <div class="action-buttons">
+                    <button id="downloadBtn"
+                            class="btn download-btn"
+                            th:attr="data-book-id=${book.id},
+                                         data-book-name=${book.name}">
+                        <i class="fas fa-download"></i> Download
+                    </button>
+                    <button id="readBtn"
+                            class="btn read-btn"
+                            th:attr="data-book-id=${book.id}">
+                        <i class="fas fa-book-open"></i> Read Online
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- PDF Modal -->
+    <div id="book-pdf-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-btn">&times;</span>
+            <iframe class="pdf-viewer" style="width:100%; height:100%; border:none;"></iframe>
+        </div>
+    </div>
+</main>
+
+<th:block th:fragment="script">
+    <script th:src="@{/js/book-details.js}"></script>
+</th:block>
+</body>
+</html>
