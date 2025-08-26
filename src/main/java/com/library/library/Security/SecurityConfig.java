@@ -4,6 +4,7 @@ import com.library.library.Exception.infrastructure.AccountLockedException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -145,7 +146,20 @@ public class SecurityConfig {
 
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
                 )
-
+                .exceptionHandling(exceptionHandling -> exceptionHandling
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            // If the request is an AJAX request, then we return a JSON response.
+                            if ("XMLHttpRequest".equals(request.getHeader("X-Requested-With"))) {
+                                response.setContentType("application/json");
+                                response.setStatus(HttpStatus.FORBIDDEN.value());
+                                response.getWriter().write("{ \"error\": \"" + accessDeniedException.getMessage() + "\" }");
+                            } else {
+                                // Redirect to dedicated access denied page or to home with a flash attribute?
+                                // We'll redirect to /access-denied
+                                response.sendRedirect(request.getContextPath() + "/access-denied");
+                            }
+                        })
+                )
                 // Remember Me
                 .rememberMe(remember -> remember
                         .rememberMeServices(rememberMeServices())

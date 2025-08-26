@@ -73,6 +73,9 @@ public class UserCredentialsServiceImp implements UserCredentialsService {
     public boolean isAccountLocked(String email) {
         return loginAttemptService.isAccountLocked(email);
     }
+    public boolean isAccountDeleted(String email) {
+        return loginAttemptService.isAccountDeleted(email);
+    }
 
     public int getRemainingAttempts(String email) {
         return loginAttemptService.getRemainingAttempts(email);

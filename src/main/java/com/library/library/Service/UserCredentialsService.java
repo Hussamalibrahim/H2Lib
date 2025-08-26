@@ -30,5 +30,7 @@ public interface UserCredentialsService {
 
     boolean isAccountLocked(String email);
 
+    boolean isAccountDeleted(String email);
+
     Instant getLockedUntil(String loginEmail);
 }

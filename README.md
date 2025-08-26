@@ -4,4 +4,8 @@
 - but for implement it i need web flux
 - - that need mango do
 - web flux for categories
-- could add theme
+- could add theme k
+
+
+docker compose up --build
+# to run object

@@ -67,6 +67,11 @@ public class LoginAttemptService implements LoginAttemptTracker {
                                 checkAccountBlockStatus(credentials))
                 .orElse(false);
     }
+    public boolean isAccountDeleted(String email) {
+        return userCredentialsService.findByEmail(email)
+                .map(UserCredentials::isAccountExpired)
+                .orElse(false);
+    }
 
 
     private boolean checkAccountBlockStatus(UserCredentials credentials) {
