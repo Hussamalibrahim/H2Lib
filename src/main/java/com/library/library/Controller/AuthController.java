@@ -32,15 +32,12 @@ import java.util.Map;
 @Slf4j
 @Controller
 public class AuthController {
-
     @Autowired
     private AuthenticationManager authenticationManager;
     @Autowired
     private JwtService jwtService;
     @Autowired
     private UserCredentialsService userCredentialsService;
-
-
 
     @GetMapping("/login")
     public String loginPage(@AuthenticationPrincipal UserPrincipal userPrincipal) {
@@ -51,7 +48,6 @@ public class AuthController {
         }
         return "login";
     }
-
 
     @GetMapping("/register")
     public String registerPage(@AuthenticationPrincipal UserPrincipal userPrincipal) {
@@ -68,10 +64,9 @@ public class AuthController {
         }
         return "logout";
     }
+
     @PostMapping(value = "/login-back", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> loginBack(@RequestBody LoginRequest loginRequest,
-                                       HttpServletRequest request,
-                                       HttpServletResponse response) {
+    public ResponseEntity<?> loginBack(@RequestBody LoginRequest loginRequest, HttpServletRequest request, HttpServletResponse response) {
         Map<String, Object> responseBody = new HashMap<>();
         try {
             if (loginRequest.getEmail() == null || loginRequest.getEmail().trim().isEmpty()) {
@@ -79,9 +74,7 @@ public class AuthController {
                 responseBody.put("fieldErrors", Map.of("email", "Email is required"));
                 return ResponseEntity.badRequest().body(responseBody);
             }
-
             String email = loginRequest.getEmail().trim();
-
             // Account checks
             if (userCredentialsService.isAccountLocked(email)) {
                 responseBody.put("success", false);
@@ -90,23 +83,16 @@ public class AuthController {
                 responseBody.put("accountLockedUntil", userCredentialsService.getLockedUntil(email));
                 return ResponseEntity.status(HttpStatus.LOCKED).body(responseBody);
             }
-
             if (userCredentialsService.isAccountDeleted(email)) {
                 responseBody.put("success", false);
                 responseBody.put("message", "Account deleted");
                 return ResponseEntity.status(HttpStatus.LOCKED).body(responseBody);
-            }
-
-            // Authenticate
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(email, loginRequest.getPassword())
-            );
-
+            } // Authenticate
+            Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(email, loginRequest.getPassword()));
             SecurityContextHolder.getContext().setAuthentication(authentication);
             UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
             String jwt = jwtService.generateToken(userPrincipal);
             request.getSession().setAttribute("JWT", jwt);
-
             // Redirect handling
             String targetUrl = loginRequest.getTargetUrl();
             if (targetUrl == null || targetUrl.isEmpty()) {
@@ -119,12 +105,10 @@ public class AuthController {
                     targetUrl = "/";
                 }
             }
-
             responseBody.put("success", true);
             responseBody.put("token", jwt);
             responseBody.put("redirectUrl", targetUrl);
             return ResponseEntity.ok(responseBody);
-
         } catch (BadCredentialsException e) {
             responseBody.put("success", false);
             responseBody.put("message", "Invalid email or password");
@@ -139,38 +123,30 @@ public class AuthController {
     @PostMapping(value = "/register-back", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> registerBack(@RequestBody RegistrationDto registrationRequest) {
         Map<String, Object> response = new HashMap<>();
-
         try {
             if (registrationRequest.getEmail() == null || registrationRequest.getEmail().trim().isEmpty()) {
                 response.put("success", false);
                 response.put("fieldErrors", Map.of("email", "Email is required"));
                 return ResponseEntity.badRequest().body(response);
             }
-
             if (!registrationRequest.getPassword().equals(registrationRequest.getConfirmPassword())) {
                 response.put("success", false);
                 response.put("fieldErrors", Map.of("confirmError", "Passwords do not match"));
                 return ResponseEntity.badRequest().body(response);
             }
-
             registrationRequest.setEmail(registrationRequest.getEmail().trim());
             if (registrationRequest.getName() != null) {
                 registrationRequest.setName(registrationRequest.getName().trim());
             }
-
             userCredentialsService.create(registrationRequest);
-
             response.put("success", true);
             response.put("message", "Registration successful. Please login.");
             response.put("redirectUrl", "/login");
             return ResponseEntity.ok(response);
-
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", e.getMessage());
             return ResponseEntity.badRequest().body(response);
         }
     }
-
-
 }

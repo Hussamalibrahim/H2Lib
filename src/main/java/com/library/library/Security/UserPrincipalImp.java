@@ -92,17 +92,10 @@ public class UserPrincipalImp implements UserPrincipal {
 
     @Override
     public boolean isEnabled() {
-        // For OAuth users, skip email verification
-        if (isOAuth2User()) {
-            return userCredentials != null &&
-                    Boolean.TRUE.equals(userCredentials.getEnabled());
-        }
-        // For regular users, require email verification
         return userCredentials != null &&
-                Boolean.TRUE.equals(userCredentials.getEnabled()) &&
-                Boolean.TRUE.equals(userCredentials.getEmailVerified());
-//        return true;
+                Boolean.TRUE.equals(userCredentials.getEnabled());
     }
+
 
     @Override
     public String getName() {
