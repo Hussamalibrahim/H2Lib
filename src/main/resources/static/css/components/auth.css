@@ -88,6 +88,11 @@
 }
 
 /* Button styles */
+/* Add this to your existing auth.css file */
+.btn-auth i {
+    margin-right: 8px;
+}
+
 .btn-auth {
     display: inline-flex;
     align-items: center;
@@ -136,15 +141,38 @@
     margin-left: 0.5rem;
 }
 
-/* Remember me checkbox */
+/* Remember me checkbox - checkbox on the right */
 .remember-me {
     display: flex;
     align-items: center;
     margin-bottom: 1.5rem;
+    gap: 0.5rem;
+    justify-content: flex-start;
+    width: fit-content;
+    flex-direction: row-reverse; /* This reverses the order */
 }
 
-.remember-me input {
-    margin-right: 0.5rem;
+.remember-me input[type="checkbox"] {
+    width: auto;
+    margin: 0;
+    transform: scale(1.2);
+}
+
+.remember-me label {
+    margin-bottom: 0;
+    font-weight: normal;
+    cursor: pointer;
+}
+
+.auth-actions {
+    display: flex;
+    justify-content: center; /* Center the button */
+    margin-top: 2rem;
+}
+
+.auth-actions .btn-auth {
+    width: auto; /* Remove full width */
+    min-width: 120px; /* Minimum width for better appearance */
 }
 
 /* Divider */

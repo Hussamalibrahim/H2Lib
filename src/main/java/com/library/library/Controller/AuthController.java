@@ -9,19 +9,25 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.AccessDeniedException;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.web.savedrequest.HttpSessionRequestCache;
+import org.springframework.security.web.savedrequest.RequestCache;
+import org.springframework.security.web.savedrequest.SavedRequest;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.time.Instant;
+import java.util.HashMap;
+import java.util.Map;
 
 @Slf4j
 @Controller
@@ -62,74 +68,109 @@ public class AuthController {
         }
         return "logout";
     }
-
-    @PostMapping("/login-back")
-    public String loginBack(@RequestBody LoginRequest loginRequest,
-                            @AuthenticationPrincipal UserPrincipal userPrincipal,
-                            HttpServletRequest request,
-                            RedirectAttributes redirectAttributes,
-                            HttpServletResponse response) {
+    @PostMapping(value = "/login-back", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> loginBack(@RequestBody LoginRequest loginRequest,
+                                       HttpServletRequest request,
+                                       HttpServletResponse response) {
+        Map<String, Object> responseBody = new HashMap<>();
         try {
-            String email = loginRequest.getEmail();
+            if (loginRequest.getEmail() == null || loginRequest.getEmail().trim().isEmpty()) {
+                responseBody.put("success", false);
+                responseBody.put("fieldErrors", Map.of("email", "Email is required"));
+                return ResponseEntity.badRequest().body(responseBody);
+            }
 
-            // Account lock check
-            if(userCredentialsService.isAccountLocked(email)) {
-                redirectAttributes.addAttribute("error", "Account locked");
-                redirectAttributes.addAttribute("code", 423); // HTTP 423 Locked
-                redirectAttributes.addAttribute("accountLockedUntil",
-                        userCredentialsService.getLockedUntil(email));
-                return "redirect:/login";
+            String email = loginRequest.getEmail().trim();
+
+            // Account checks
+            if (userCredentialsService.isAccountLocked(email)) {
+                responseBody.put("success", false);
+                responseBody.put("message", "Account locked");
+                responseBody.put("code", 423);
+                responseBody.put("accountLockedUntil", userCredentialsService.getLockedUntil(email));
+                return ResponseEntity.status(HttpStatus.LOCKED).body(responseBody);
             }
-            if(userCredentialsService.isAccountDeleted(email)) {
-                redirectAttributes.addAttribute("error", "Account locked");
-                redirectAttributes.addAttribute("code", 423); // HTTP 423 Locked
-                redirectAttributes.addAttribute("accountLockedUntil",
-                        userCredentialsService.getLockedUntil(email));
-                return "redirect:/login";
+
+            if (userCredentialsService.isAccountDeleted(email)) {
+                responseBody.put("success", false);
+                responseBody.put("message", "Account deleted");
+                return ResponseEntity.status(HttpStatus.LOCKED).body(responseBody);
             }
+
+            // Authenticate
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(
-                            loginRequest.getEmail(),
-                            loginRequest.getPassword())
+                    new UsernamePasswordAuthenticationToken(email, loginRequest.getPassword())
             );
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
-
+            UserPrincipal userPrincipal = (UserPrincipal) authentication.getPrincipal();
             String jwt = jwtService.generateToken(userPrincipal);
-
             request.getSession().setAttribute("JWT", jwt);
 
-            return "redirect:/";
-
-        } catch (AuthenticationException e) {
-            redirectAttributes.addAttribute("error", "Invalid email or password");
-            return "redirect:/login";
-        }
-    }
-
-    @PostMapping("/register-back")
-    public String registerBack(@RequestBody RegistrationDto registrationRequest,
-                               RedirectAttributes redirectAttributes) {
-        try {
-            if (!registrationRequest.getPassword().equals(registrationRequest.getConfirmPassword())) {
-                redirectAttributes.addAttribute("error", "Passwords do not match");
-                return "redirect:/register";
+            // Redirect handling
+            String targetUrl = loginRequest.getTargetUrl();
+            if (targetUrl == null || targetUrl.isEmpty()) {
+                RequestCache requestCache = new HttpSessionRequestCache();
+                SavedRequest savedRequest = requestCache.getRequest(request, response);
+                if (savedRequest != null) {
+                    targetUrl = savedRequest.getRedirectUrl();
+                    requestCache.removeRequest(request, response);
+                } else {
+                    targetUrl = "/";
+                }
             }
 
-            RegistrationDto registrationDto = new RegistrationDto();
-            registrationDto.setName(registrationRequest.getName());
-            registrationDto.setEmail(registrationRequest.getEmail());
-            registrationDto.setPassword(registrationRequest.getPassword());
-            registrationDto.setConfirmPassword(registrationRequest.getConfirmPassword());
+            responseBody.put("success", true);
+            responseBody.put("token", jwt);
+            responseBody.put("redirectUrl", targetUrl);
+            return ResponseEntity.ok(responseBody);
 
-            userCredentialsService.create(registrationDto);
-
-            redirectAttributes.addAttribute("success", "Registration successful. Please login.");
-            return "redirect:/login";
-
-        } catch (Exception e) {
-            redirectAttributes.addAttribute("error", e.getMessage());
-            return "redirect:/register";
+        } catch (BadCredentialsException e) {
+            responseBody.put("success", false);
+            responseBody.put("message", "Invalid email or password");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
+        } catch (AuthenticationException e) {
+            responseBody.put("success", false);
+            responseBody.put("message", "Authentication failed");
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(responseBody);
         }
     }
+
+    @PostMapping(value = "/register-back", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> registerBack(@RequestBody RegistrationDto registrationRequest) {
+        Map<String, Object> response = new HashMap<>();
+
+        try {
+            if (registrationRequest.getEmail() == null || registrationRequest.getEmail().trim().isEmpty()) {
+                response.put("success", false);
+                response.put("fieldErrors", Map.of("email", "Email is required"));
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            if (!registrationRequest.getPassword().equals(registrationRequest.getConfirmPassword())) {
+                response.put("success", false);
+                response.put("fieldErrors", Map.of("confirmError", "Passwords do not match"));
+                return ResponseEntity.badRequest().body(response);
+            }
+
+            registrationRequest.setEmail(registrationRequest.getEmail().trim());
+            if (registrationRequest.getName() != null) {
+                registrationRequest.setName(registrationRequest.getName().trim());
+            }
+
+            userCredentialsService.create(registrationRequest);
+
+            response.put("success", true);
+            response.put("message", "Registration successful. Please login.");
+            response.put("redirectUrl", "/login");
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", e.getMessage());
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+
 }

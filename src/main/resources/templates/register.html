@@ -34,8 +34,12 @@
             <span th:text="${param.error}">Error message</span>
         </div>
 
+        <!-- ✅ Flash messages container -->
+        <div id="flashMessage"></div>
+
         <form id="registerForm" th:action="@{/register-back}" method="post" novalidate>
             <input type="hidden" name="_csrf" th:value="${_csrf.token}"/>
+            <input type="hidden" th:if="${param.targetUrl}" th:value="${param.targetUrl[0]}" name="targetUrl">
 
             <div class="form-group">
                 <label for="registerName">Full Name</label>
@@ -88,13 +92,15 @@
 
         <div class="auth-link">
             <span>Already have an account?</span>
-            <a th:href="@{/login}" class="switch-to-login">Login</a>
+            <a th:if="${param.targetUrl}" th:href="@{/login(targetUrl=${param.targetUrl[0]})}" class="switch-to-login">Login</a>
+            <a th:unless="${param.targetUrl}" th:href="@{/login}" class="switch-to-login">Login</a>
         </div>
     </div>
 </div>
 
 <div th:replace="~{fragments/footer :: footer}"></div>
 
-<script th:src="@{/js/auth.js}"></script>
+<!-- ✅ Make sure correct JS file is loaded -->
+<script th:src="@{/js/register.js}"></script>
 </body>
 </html>

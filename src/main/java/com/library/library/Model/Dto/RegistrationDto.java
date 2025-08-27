@@ -23,6 +23,8 @@ public class RegistrationDto {
     @NotBlank(message = "Confirm Password is required")
     private String confirmPassword;
 
+    private String targetUrl;
+
     @AssertTrue(message = "Passwords must match")
     public boolean isPasswordMatching() {
         return password != null && password.equals(confirmPassword);

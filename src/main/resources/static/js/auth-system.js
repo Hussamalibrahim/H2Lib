@@ -37,120 +37,55 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ==================== FORM HANDLERS ====================
-
 async function handleLoginForm(form) {
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const buttonText = submitBtn.querySelector('.button-text');
-    const buttonLoader = submitBtn.querySelector('.button-loader');
+    const email = document.getElementById('loginEmail').value.trim();
+    const password = document.getElementById('loginPassword').value;
+    const rememberMe = document.getElementById('rememberMe').checked;
+    const targetUrl = new URLSearchParams(window.location.search).get('targetUrl') || "";
 
-    try {
-        // Show loading state
-        buttonText.textContent = 'Logging in...';
-        buttonLoader.style.display = 'inline-block';
-        submitBtn.disabled = true;
+    const response = await fetch('/login-back', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, rememberMe, targetUrl })
+    });
 
-        // Clear previous errors
-        clearFormErrors(form);
-
-        // Validate form
-        const email = document.getElementById('loginEmail').value.trim();
-        const password = document.getElementById('loginPassword').value;
-
-        if (!email || !password) {
-            throw new Error('Please fill in all fields');
-        }
-
-        // Submit form
-        const response = await authenticatedFetch('/login-back', {
-            method: 'POST',
-            body: JSON.stringify({
-                email: email,
-                password: password,
-                rememberMe: document.getElementById('rememberMe').checked
-            })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            if (errorData.fieldErrors) {
-                displayFieldErrors(form, errorData.fieldErrors);
-                throw new Error('Please correct the highlighted fields');
-            }
-            throw new Error(errorData.message || 'Login failed');
-        }
-
-        // Handle successful login
-        const data = await response.json();
+    const data = await response.json();
+    if (data.success) {
         handleSuccessfulLogin(data.token, data.redirectUrl);
-
-    } catch (error) {
-        showToast(error.message, 'error');
-        console.error('Login error:', error);
-    } finally {
-        // Reset button state
-        buttonText.textContent = 'Login';
-        buttonLoader.style.display = 'none';
-        submitBtn.disabled = false;
+    } else {
+        showError(data.message || "Login failed");
     }
 }
 
-async function handleRegistrationForm(form) {
-    const submitBtn = form.querySelector('button[type="submit"]');
-    const buttonText = submitBtn.querySelector('.button-text');
-    const buttonLoader = submitBtn.querySelector('.button-loader');
+async function handleRegistrationForm(e) {
+    e.preventDefault();
+    const form = e.target;
 
-    try {
-        // Show loading state
-        buttonText.textContent = 'Creating account...';
-        buttonLoader.style.display = 'inline-block';
-        submitBtn.disabled = true;
+    const name = document.getElementById('registerName').value.trim();
+    const email = document.getElementById('registerEmail').value.trim();
+    const password = document.getElementById('registerPassword').value;
+    const confirmPassword = document.getElementById('registerConfirmPassword').value;
 
-        // Clear previous errors
-        clearFormErrors(form);
+    if (password !== confirmPassword) {
+        showError("Passwords do not match");
+        return;
+    }
 
-        // Validate form
-        if (!validateRegistrationForm()) {
-            submitBtn.disabled = false;
-            return;
-        }
+    const response = await fetch('/register-back', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, email, password, confirmPassword })
+    });
 
-        // Submit form
-        const response = await authenticatedFetch('/register-back', {
-            method: 'POST',
-            body: JSON.stringify({
-                name: document.getElementById('registerName').value.trim(),
-                email: document.getElementById('registerEmail').value.trim(),
-                password: document.getElementById('registerPassword').value,
-                confirmPassword: document.getElementById('registerConfirmPassword').value
-            })
-        });
-
-        if (!response.ok) {
-            const errorData = await response.json();
-            if (errorData.fieldErrors) {
-                displayFieldErrors(form, errorData.fieldErrors);
-                throw new Error('Please correct the highlighted fields');
-            }
-            throw new Error(errorData.message || 'Registration failed');
-        }
-
-        // Handle successful registration
-        const data = await response.json();
-        showToast('Registration successful! Redirecting to login...', 'success');
-        setTimeout(() => {
-            window.location.href = data.redirectUrl || '/login';
-        }, 1500);
-
-    } catch (error) {
-        showToast(error.message, 'error');
-        console.error('Registration error:', error);
-    } finally {
-        // Reset button state
-        buttonText.textContent = 'Create Account';
-        buttonLoader.style.display = 'none';
-        submitBtn.disabled = false;
+    const data = await response.json();
+    if (data.success) {
+        showSuccess("Account created successfully!");
+        setTimeout(() => window.location.href = data.redirectUrl || '/login', 1000);
+    } else {
+        showError(data.message || "Registration failed");
     }
 }
+
 
 // ==================== VALIDATION FUNCTIONS ====================
 
@@ -283,37 +218,94 @@ function showToast(message, type) {
         toast.remove();
     }, 5000);
 }
+"use strict";
 
 async function authenticatedFetch(url, options = {}) {
+    const isFormData = options.body instanceof FormData;
+
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content ||
+                      document.querySelector('input[name="_csrf"]')?.value;
+
     const config = {
         ...options,
         headers: {
-            'Content-Type': 'application/json',
-            ...options.headers
+            ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
+            ...(options.headers || {})
         }
     };
 
-    // Add CSRF token for non-GET requests
-    if (config.method && config.method !== 'GET') {
-        const csrfToken = document.querySelector('meta[name="_csrf"]')?.content ||
-                          document.querySelector('input[name="_csrf"]')?.value;
-        if (csrfToken) {
-            config.headers['X-CSRF-TOKEN'] = csrfToken;
-        }
+    if (csrfToken) {
+        config.headers['X-CSRF-TOKEN'] = csrfToken;
     }
 
     const response = await fetch(url, config);
-
-    // Handle 401 Unauthorized (token expired)
-    if (response.status === 401) {
-        localStorage.removeItem('jwtToken');
-        sessionStorage.removeItem('jwtToken');
-        document.body.classList.remove('authenticated');
-        document.body.classList.add('unauthenticated');
-        showToast('Session expired. Please login again.', 'error');
+    if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`HTTP ${response.status}: ${errorText}`);
     }
 
-    return response;
+    return response.json();
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', handleRegistrationForm);
+    }
+});
+
+async function handleRegistrationForm(e) {
+    e.preventDefault();
+    const form = e.target;
+
+    const password = document.getElementById('registerPassword').value;
+    const confirmPassword = document.getElementById('registerConfirmPassword').value;
+    if (password !== confirmPassword) {
+        showError("Passwords do not match");
+        return;
+    }
+
+    // ✅ Send as FormData instead of JSON
+    const formData = new FormData(form);
+
+    try {
+        const data = await authenticatedFetch('/register-back', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (data.success) {
+            showSuccess("Account created successfully!");
+            setTimeout(() => {
+                window.location.href = data.redirectUrl || '/login';
+            }, 1000);
+        } else {
+            showError(data.message || "Registration failed");
+        }
+    } catch (err) {
+        console.error("Registration error:", err);
+        showError("Error: " + err.message);
+    }
+}
+
+function showError(message) {
+    showMessage(message, 'danger');
+}
+
+function showSuccess(message) {
+    showMessage(message, 'success');
+}
+
+function showMessage(message, type) {
+    const flash = document.getElementById("flashMessage");
+    if (flash) {
+        flash.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+        setTimeout(() => {
+            flash.innerHTML = "";
+        }, 5000);
+    } else {
+        alert(message);
+    }
 }
 
 function handleSuccessfulLogin(token, redirectUrl) {

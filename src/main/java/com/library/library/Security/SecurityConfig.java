@@ -60,8 +60,10 @@ public class SecurityConfig {
                 // CSRF Protection
                 .csrf(csrf -> csrf
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-                        .ignoringRequestMatchers("/login-back", "/register-back")
-                        .ignoringRequestMatchers(
+                        .ignoringRequestMatchers("/login-back", "/register-back",
+                                "/login",
+                                "/register",
+                                "/favicon.ico",
                                 "/login/oauth2/code/**", // Allow OAuth2 callback
                                 "/oauth2/authorization/**" // Allow OAuth2 initiation
                                  )
@@ -83,8 +85,7 @@ public class SecurityConfig {
                                 "/js/**",
                                 "/images/**",
                                 "/h2lib/**",
-                                "/webjars/**",
-                                "/favicon.ico"
+                                "/webjars/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

@@ -67,4 +67,11 @@ public class LibraryServiceImp implements LibraryService {
             libraryRepository.save(existing);
         }
     }
+
+    public long countById() {
+        return libraryRepository.countById();
+    }
+    public Library save(Library library){
+        return libraryRepository.save(library);
+    }
 }

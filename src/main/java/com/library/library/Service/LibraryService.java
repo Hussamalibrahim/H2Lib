@@ -6,10 +6,20 @@ import com.library.library.Model.Library;
 public interface LibraryService {
 
     LibraryDto getStats();
+
     void incrementUsers();
+
     void incrementBooks();
+
     void incrementDownloads();
+
     void incrementAuthors();
+
     void incrementRating();
+
     void updateStats(Library stats);
+
+    long countById();
+
+    Library save(Library library);
 }

@@ -44,7 +44,6 @@ public class CustomAuthFilter extends OncePerRequestFilter {
     ) throws ServletException, IOException {
 
         if (isPublicEndpoint(request)) {
-            log.warn("\n\n\n\n\n the request is illegal\n\n\n\n\n\n");
             filterChain.doFilter(request, response);
             return;
         }
@@ -139,8 +138,11 @@ public class CustomAuthFilter extends OncePerRequestFilter {
     private boolean isPublicEndpoint(HttpServletRequest request) {
         String path = request.getServletPath();
         log.info("the current path is :{}",path);
-        return path.startsWith("/login-back") ||
+        return
+                path.startsWith("/login-back") ||
                 path.startsWith("/register-back") ||
+                path.startsWith("/login") ||
+                path.startsWith("/register") ||
                 path.startsWith("/settings") ||
                 path.startsWith("/oauth2") ||
                 path.startsWith("/error") ||

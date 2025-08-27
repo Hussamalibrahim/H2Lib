@@ -38,4 +38,7 @@ public interface LibraryRepository extends JpaRepository<Library, Short> {
     @Transactional
     @Query(value = "UPDATE library l SET l.total_rating = l.total_rating +1 WHERE l.library_id = 1",nativeQuery = true)
      void incrementRating();
+
+    @Query(value = "SELECT COUNT(*) library",nativeQuery = true)
+    long countById();
 }

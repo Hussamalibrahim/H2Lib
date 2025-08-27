@@ -27,6 +27,15 @@ public class AuthFailureHandler implements AuthenticationFailureHandler, Authent
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
 
+        // Check if this is an API request that should be handled by the controller
+        if (isApiRequest(request)) {
+            // Let the controller handle the response
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            response.getWriter().write("{\"error\": \"Authentication failed\"}");
+            return;
+        }
+
         log.info("\n\n\nuser come here\nn\n\n\n");
         if (exception instanceof AccountLockedException lockedEx) {
             handleLockedAccount(request, response, lockedEx);
@@ -35,6 +44,11 @@ public class AuthFailureHandler implements AuthenticationFailureHandler, Authent
         } else {
             handleGenericFailure(request, response, exception);
         }
+    }
+
+    private boolean isApiRequest(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return path.equals("/login-back") || path.equals("/register-back");
     }
 
     private void handleLockedAccount(HttpServletRequest request,
