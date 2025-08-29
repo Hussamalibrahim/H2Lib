@@ -27,22 +27,17 @@ public class AuthFailureHandler implements AuthenticationFailureHandler, Authent
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
 
-        // Check if this is an API request that should be handled by the controller
-        if (isApiRequest(request)) {
-            // Let the controller handle the response
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            response.getWriter().write("{\"error\": \"Authentication failed\"}");
-            return;
-        }
+        boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
 
-        log.info("\n\n\nuser come here\nn\n\n\n");
-        if (exception instanceof AccountLockedException lockedEx) {
-            handleLockedAccount(request, response, lockedEx);
-        } else if (exception instanceof OAuth2AuthenticationException oauthEx) {
-            handleOAuthFailure(request, response, oauthEx);
+        if (isAjax) {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{ rror\": \"" + exception.getMessage() + "\"}");
         } else {
-            handleGenericFailure(request, response, exception);
+            // normal browser redirect
+            String errorMessage = URLEncoder.encode("Authentication failed: " + exception.getMessage(), StandardCharsets.UTF_8);
+            redirectStrategy.sendRedirect(request, response, "/login?error=" + errorMessage);
         }
     }
 

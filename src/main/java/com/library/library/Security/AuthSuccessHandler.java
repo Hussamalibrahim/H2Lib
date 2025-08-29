@@ -31,22 +31,31 @@ public class AuthSuccessHandler implements AuthenticationSuccessHandler {
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response,
                                         Authentication authentication) throws IOException {
-        log.info("\n\n\nuser come AuthSuccessHandler\nn\n\n\n");
 
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
-
-        // Update user details from OAuth attributes if available
-        if (principal.getAttributes() != null) {
-            updateUserFromOAuthAttributes(principal);
-        }
-
         String jwt = jwtService.generateToken(principal);
         principal.setJwtToken(jwt);
 
         setAuthCookies(request, response, jwt);
-        setAuthHeaders(response, jwt);
-        handleRedirect(request, response);
+
+        String acceptHeader = request.getHeader("Accept");
+        String xRequestedWith = request.getHeader("X-Requested-With");
+
+        boolean isAjax = (acceptHeader != null && acceptHeader.contains("application/json")) ||
+                "XMLHttpRequest".equals(xRequestedWith);
+
+
+
+        if (isAjax) {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.getWriter().write("{\"success\":true,\"token\":\"" + jwt + "\",\"redirectUrl\":\"/\"}");
+            response.getWriter().flush();
+        } else {
+            handleRedirect(request, response);
+        }
     }
+
 
     private void updateUserFromOAuthAttributes(UserPrincipal principal) {
         Map<String, Object> attributes = principal.getAttributes();
@@ -77,9 +86,7 @@ public class AuthSuccessHandler implements AuthenticationSuccessHandler {
         }
     }
 
-    private void setAuthCookies(HttpServletRequest request,
-                                HttpServletResponse response,
-                                String jwt) {
+    private void setAuthCookies(HttpServletRequest request, HttpServletResponse response, String jwt) {
         ResponseCookie cookie = ResponseCookie.from("token", jwt)
                 .httpOnly(true)
                 .secure(request.isSecure())

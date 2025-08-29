@@ -45,13 +45,18 @@ async function handleLoginForm(form) {
     const password = document.getElementById('loginPassword').value;
     const rememberMe = document.getElementById('rememberMe').checked;
     const targetUrl = new URLSearchParams(window.location.search).get('targetUrl') || "";
+    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
 
     try {
-        const response = await fetch('/login-back', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, password, rememberMe, targetUrl })
-        });
+  const response = await fetch('/login-back', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-TOKEN': csrfToken || '',
+          'X-Requested-With': 'XMLHttpRequest'  // <-- important
+      },
+      body: JSON.stringify({ email, password, rememberMe, targetUrl })
+  });
 
         const data = await response.json();
         if (data.success) {
@@ -66,6 +71,7 @@ async function handleLoginForm(form) {
         showError("Error: " + err.message);
     }
 }
+
 
 async function handleRegistrationForm(form) {
     const name = document.getElementById('registerName').value.trim();
@@ -178,17 +184,22 @@ function showMessage(message, type) {
         alert(message);
     }
 }
-
 function handleSuccessfulLogin(token, redirectUrl) {
     const rememberMe = document.getElementById('rememberMe')?.checked;
     if (rememberMe) localStorage.setItem('jwtToken', token);
     else sessionStorage.setItem('jwtToken', token);
+
+    console.log("rememberMe:", rememberMe);
+    console.log("token:", token);
+    console.log("localStorage:", localStorage.getItem('jwtToken'));
+    console.log("sessionStorage:", sessionStorage.getItem('jwtToken'));
 
     document.body.classList.add('authenticated');
     document.body.classList.remove('unauthenticated');
 
     window.location.href = redirectUrl || '/';
 }
+
 
 function updateAuthState() {
     const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken');
@@ -200,3 +211,9 @@ function updateAuthState() {
         document.body.classList.add('unauthenticated');
     }
 }
+
+
+console.log("rememberMe:", rememberMe);
+console.log("token:", token);
+console.log("localStorage:", localStorage.getItem('jwtToken'));
+console.log("sessionStorage:", sessionStorage.getItem('jwtToken'));

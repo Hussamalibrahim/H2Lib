@@ -1,6 +1,7 @@
 package com.library.library.Security;
 
 import com.library.library.Exception.infrastructure.AccountLockedException;
+import com.library.library.Security.JWT.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -11,10 +12,12 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -40,10 +43,16 @@ public class SecurityConfig {
     private UserDetailsService userDetailsService;
     @Autowired
     private CustomAuthFilter customAuthFilter;
+    @Autowired
+    private JwtService jwtService;
+    @Autowired
+    LogoutService logoutService;
 
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationManager authManager) throws Exception {
+
+
         return http
                 // HTTPS/SSL Enforcement
 //                .requiresChannel(channel -> channel
@@ -59,14 +68,13 @@ public class SecurityConfig {
 
                 // CSRF Protection
                 .csrf(csrf -> csrf
+//                                .disable()
                         .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                         .ignoringRequestMatchers("/login-back", "/register-back",
-                                "/login",
-                                "/register",
                                 "/favicon.ico",
                                 "/login/oauth2/code/**", // Allow OAuth2 callback
                                 "/oauth2/authorization/**" // Allow OAuth2 initiation
-                                 )
+                        )
                 )
 
                 // Authorization
@@ -75,9 +83,9 @@ public class SecurityConfig {
                                 "/",
                                 "/login",
                                 "/register",
-                                "/favicon.ico",
                                 "/login-back",
                                 "/register-back",
+                                "/favicon.ico",
                                 "/error",
                                 "/us/**",
                                 "/css/**",
@@ -105,10 +113,12 @@ public class SecurityConfig {
                 // Form Login
                 .formLogin(form -> form
                         .loginPage("/login")
+                        .loginProcessingUrl("/login")
                         .successHandler(authenticationSuccessHandler())
                         .failureHandler(authenticationFailureHandler())
                         .permitAll()
                 )
+//                .formLogin(AbstractHttpConfigurer::disable)
 
                 // OAuth2 Login
                 .oauth2Login(oauth -> oauth
@@ -121,10 +131,11 @@ public class SecurityConfig {
                 // Logout
                 .logout(logout -> logout
                         .logoutUrl("/logout")
+                        .addLogoutHandler((request, response, authentication) -> {
+                            logoutService.logout(request, response);
+                        })
                         .logoutSuccessUrl("/")
                         .deleteCookies("JSESSIONID", "XSRF-TOKEN")
-                        .invalidateHttpSession(true)
-                        .clearAuthentication(true)
                         .permitAll()
                 )
                 // Security Headers
@@ -147,6 +158,7 @@ public class SecurityConfig {
 
                         .frameOptions(HeadersConfigurer.FrameOptionsConfig::sameOrigin)
                 )
+
                 .exceptionHandling(exceptionHandling -> exceptionHandling
                         .accessDeniedHandler((request, response, accessDeniedException) -> {
                             // If the request is an AJAX request, then we return a JSON response.
@@ -168,8 +180,10 @@ public class SecurityConfig {
                         .tokenValiditySeconds(rememberMeProperties.getExpiration())
                 )
                 .addFilterBefore(customAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAt(jsonFilter(authManager), UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
+
 
     @Bean
     public TokenBasedRememberMeServices rememberMeServices() {
@@ -198,9 +212,39 @@ public class SecurityConfig {
     }
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public JsonUsernamePasswordAuthenticationFilter jsonFilter(AuthenticationManager authManager) {
+        JsonUsernamePasswordAuthenticationFilter filter =
+                new JsonUsernamePasswordAuthenticationFilter(authManager, jwtService, rememberMeServices());
+
+        filter.setAuthenticationManager(authManager);
+        filter.setFilterProcessesUrl("/login-back");
+
+        // Return JSON on success/failure
+        filter.setAuthenticationSuccessHandler((request, response, authentication) -> {
+            UserPrincipalImp principal = (UserPrincipalImp) authentication.getPrincipal();
+            String token = jwtService.generateToken(principal); // Implement JWT generation
+            principal.setJwtToken(token);
+
+            response.setContentType("application/json");
+            response.getWriter().write("{\"success\": true, \"token\": \"" + token + "\", \"redirectUrl\": \"/\"}");
+        });
+
+        filter.setAuthenticationFailureHandler((request, response, exception) -> {
+            response.setStatus(HttpStatus.UNAUTHORIZED.value());
+            response.setContentType("application/json");
+            response.getWriter().write("{\"success\": false, \"message\": \"" + exception.getMessage() + "\"}");
+        });
+
+        return filter;
     }
+
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        //TODO REPLACE THIS
+        return NoOpPasswordEncoder.getInstance();
+    }
+
 
     @Bean
     public AuthenticationSuccessHandler authenticationSuccessHandler() {
