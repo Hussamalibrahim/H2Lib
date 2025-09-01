@@ -64,7 +64,6 @@ public class AuthSuccessHandler implements AuthenticationSuccessHandler {
         principal.getUsersCredentials().setEmailVerified(true);
 
         if (principal.getUsers() != null) {
-            // Update display name if not set
             if (principal.getUsers().getDisplayName() == null) {
                 String name = (String) attributes.get("name");
                 if (name != null) {
@@ -72,7 +71,6 @@ public class AuthSuccessHandler implements AuthenticationSuccessHandler {
                 }
             }
 
-            // Update avatar if not set
             if (principal.getUsers().getImageUrl() == null) {
                 String imageUrl = (String) attributes.get("picture");
                 if (imageUrl == null) {
@@ -103,9 +101,8 @@ public class AuthSuccessHandler implements AuthenticationSuccessHandler {
 
     private void handleRedirect(HttpServletRequest request,
                                 HttpServletResponse response) throws IOException {
-        String redirectUrl = "/"; // Default redirect
+        String redirectUrl = "/";
 
-        // Check for saved request
         HttpSession session = request.getSession(false);
         if (session != null) {
             DefaultSavedRequest savedRequest = (DefaultSavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST");

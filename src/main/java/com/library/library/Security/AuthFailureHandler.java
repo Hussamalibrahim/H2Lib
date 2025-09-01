@@ -35,7 +35,8 @@ public class AuthFailureHandler implements AuthenticationFailureHandler, Authent
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             response.getWriter().write("{ rror\": \"" + exception.getMessage() + "\"}");
         } else {
-            // normal browser redirect
+
+
             String errorMessage = URLEncoder.encode("Authentication failed: " + exception.getMessage(), StandardCharsets.UTF_8);
             redirectStrategy.sendRedirect(request, response, "/login?error=" + errorMessage);
         }

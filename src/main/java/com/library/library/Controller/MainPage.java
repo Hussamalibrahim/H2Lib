@@ -42,7 +42,6 @@ public class MainPage {
         if (userPrincipal != null) {
             Users user = userPrincipal.getUsers();
             model.addAttribute("user", user);
-            log.info("\n\nn\n\n {} user sign in \n\nn\n\n",user.getId());
         }
             model.addAttribute("categories", bookTypeService.findAll());
 

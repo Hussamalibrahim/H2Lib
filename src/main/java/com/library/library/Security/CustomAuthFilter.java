@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -34,15 +35,21 @@ public class CustomAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
                                     FilterChain filterChain) throws ServletException, IOException {
+        String path = request.getServletPath();
+
+        if (path.equals("/login-back") || path.equals("/register-back")) {
+            filterChain.doFilter(request, response);
+            return;
+        }
 
         String token = getJwtFromRequest(request);
 
         if (token != null) {
             try {
                 if (jwtService.isTokenValid(token)) {
-                    var principal = jwtService.getPrincipalFromToken(token);
+                    UserPrincipal principal = jwtService.getPrincipalFromToken(token);
                     if (principal != null) {
-                        var auth = new UsernamePasswordAuthenticationToken(
+                        Authentication auth = new UsernamePasswordAuthenticationToken(
                                 principal,
                                 null,
                                 principal.getAuthorities()
@@ -50,7 +57,6 @@ public class CustomAuthFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(auth);
                     }
                 }
-
             } catch (JwtException e) {
                 log.warn("Invalid JWT token: {}", e.getMessage());
                 response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Invalid token");
@@ -62,16 +68,14 @@ public class CustomAuthFilter extends OncePerRequestFilter {
     }
 
     private String getJwtFromRequest(HttpServletRequest request) {
-        // Check header
         String authHeader = request.getHeader("Authorization");
         if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
             return authHeader.substring(7);
         }
 
-        // Check cookie
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
-                if ("token".equals(cookie.getName())) {
+                if ("jwt".equals(cookie.getName())) {
                     return cookie.getValue();
                 }
             }
