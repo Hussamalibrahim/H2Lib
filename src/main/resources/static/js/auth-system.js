@@ -43,20 +43,13 @@ document.addEventListener('DOMContentLoaded', function() {
 async function handleLoginForm(form) {
     const email = document.getElementById('loginEmail').value.trim();
     const password = document.getElementById('loginPassword').value;
-    const rememberMe = document.getElementById('rememberMe').checked;
-    const targetUrl = new URLSearchParams(window.location.search).get('targetUrl') || "";
-    const csrfToken = document.querySelector('meta[name="_csrf"]')?.content;
 
     try {
-  const response = await fetch('/login-back', {
-      method: 'POST',
-      headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-TOKEN': csrfToken || '',
-          'X-Requested-With': 'XMLHttpRequest'  // <-- important
-      },
-      body: JSON.stringify({ email, password, rememberMe, targetUrl })
-  });
+        const response = await fetch('/login-back', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
 
         const data = await response.json();
         if (data.success) {
@@ -95,7 +88,8 @@ async function handleRegistrationForm(form) {
         const data = await response.json();
         if (data.success) {
             showSuccess("Account created successfully!");
-            setTimeout(() => window.location.href = data.redirectUrl || '/login', 1000);
+            // Save token & redirect (just like login)
+            handleSuccessfulLogin(data.token, data.redirectUrl);
         } else if (data.fieldErrors) {
             displayFieldErrors(form, data.fieldErrors);
         } else {
@@ -106,6 +100,7 @@ async function handleRegistrationForm(form) {
         showError("Error: " + err.message);
     }
 }
+
 
 // ==================== VALIDATION FUNCTIONS ====================
 
@@ -159,20 +154,34 @@ function displayFieldErrors(form, fieldErrors) {
     }
 }
 
-function showFieldError(elementId, message) {
-    const element = document.getElementById(elementId);
-    if (element) {
-        element.textContent = message;
-        element.previousElementSibling?.classList.add('has-error');
+function showFieldError(fieldId, message) {
+    const field = document.getElementById(fieldId);
+    if (field) {
+        field.innerText = message;
+        field.style.display = "block";
+    } else {
+        alert(message);
     }
 }
 
 function showError(message) {
-    showMessage(message, 'danger');
+    const errorDiv = document.getElementById("errorMessage");
+    if (errorDiv) {
+        errorDiv.innerText = message;
+        errorDiv.style.display = "block";
+    } else {
+        alert(message);
+    }
 }
 
 function showSuccess(message) {
-    showMessage(message, 'success');
+    const successDiv = document.getElementById("successMessage");
+    if (successDiv) {
+        successDiv.innerText = message;
+        successDiv.style.display = "block";
+    } else {
+        alert(message);
+    }
 }
 
 function showMessage(message, type) {
@@ -184,22 +193,16 @@ function showMessage(message, type) {
         alert(message);
     }
 }
+
 function handleSuccessfulLogin(token, redirectUrl) {
-    const rememberMe = document.getElementById('rememberMe')?.checked;
-    if (rememberMe) localStorage.setItem('jwtToken', token);
-    else sessionStorage.setItem('jwtToken', token);
+    localStorage.setItem("jwtToken", token);
 
-    console.log("rememberMe:", rememberMe);
-    console.log("token:", token);
-    console.log("localStorage:", localStorage.getItem('jwtToken'));
-    console.log("sessionStorage:", sessionStorage.getItem('jwtToken'));
-
-    document.body.classList.add('authenticated');
-    document.body.classList.remove('unauthenticated');
-
-    window.location.href = redirectUrl || '/';
+    if (redirectUrl) {
+        window.location.href = redirectUrl;
+    } else {
+        window.location.href = "/";
+    }
 }
-
 
 function updateAuthState() {
     const token = localStorage.getItem('jwtToken') || sessionStorage.getItem('jwtToken');
@@ -211,9 +214,3 @@ function updateAuthState() {
         document.body.classList.add('unauthenticated');
     }
 }
-
-
-console.log("rememberMe:", rememberMe);
-console.log("token:", token);
-console.log("localStorage:", localStorage.getItem('jwtToken'));
-console.log("sessionStorage:", sessionStorage.getItem('jwtToken'));

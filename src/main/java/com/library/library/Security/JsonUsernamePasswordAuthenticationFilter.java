@@ -36,7 +36,6 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
                                                 HttpServletResponse response) throws AuthenticationException {
         if (request.getContentType() != null && request.getContentType().contains("application/json")) {
             try {
-                @SuppressWarnings("unchecked")
                 Map<String, String> creds = objectMapper.readValue(request.getInputStream(), Map.class);
 
                 String username = creds.get("email");

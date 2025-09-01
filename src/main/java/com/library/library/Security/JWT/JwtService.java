@@ -29,7 +29,6 @@ public class JwtService {
     @Autowired
     private UserCredentialsRepository userCredentialsRepository;
 
-    // Generate token with extra claims
     public String generateToken(UserPrincipal userPrincipal) {
         Map<String, Object> extraClaims = new HashMap<>();
         extraClaims.put("email", userPrincipal.getEmail());
@@ -45,11 +44,10 @@ public class JwtService {
                 .compact();
     }
 
-    // Validate token (expiration + signature)
     public boolean isTokenValid(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(getSignInKey()).build().parseClaimsJws(token);
-            return !isTokenExpired(token) && StringUtils.hasText(extractUsername(token));
+            return !isTokenExpired(token) && StringUtils.hasText(extractSubject(token));
         } catch (JwtException e) {
             log.warn("Invalid JWT token: {}", e.getMessage());
             return false;
@@ -64,7 +62,7 @@ public class JwtService {
         return extractClaim(token, Claims::getExpiration);
     }
 
-    public String extractUsername(String token) {
+    public String extractSubject(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
@@ -88,24 +86,21 @@ public class JwtService {
         return authorities.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
     }
 
-    // Build UserPrincipal from token
-    public UserPrincipalImp getPrincipalFromToken(String token) {
+    public UserPrincipal getPrincipalFromToken(String token) {
         Claims claims = extractAllClaims(token);
         String email = claims.getSubject();
 
         Optional<UserCredentials> optionalUser = userCredentialsRepository.findByEmail(email);
         if (optionalUser.isEmpty()) {
             log.warn("JWT contains unknown email: {}", email);
-            return null;  // skip setting authentication
+            return null;
         }
 
-        UserPrincipalImp principal = new UserPrincipalImp(optionalUser.get());
+        UserPrincipal principal = new UserPrincipalImp(optionalUser.get());
         principal.setJwtToken(token);
         return principal;
     }
 
-
-    // Key for signing and validating
     private Key getSignInKey() {
         byte[] keyBytes = jwtProperties.getSecretKey().getBytes(StandardCharsets.UTF_8);
         return Keys.hmacShaKeyFor(keyBytes);
