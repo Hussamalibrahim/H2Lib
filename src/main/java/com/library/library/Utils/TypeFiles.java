@@ -1,6 +1,6 @@
 package com.library.library.Utils;
 
-import com.library.library.Exception.Validation.MissingFileExtensionException;
+import com.library.library.exception.Validation.MissingFileExtensionException;
 
 import java.util.Optional;
 

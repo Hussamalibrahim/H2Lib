@@ -1,54 +1,47 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
-<head th:replace="fragments/head :: head('Profile')">
+<head>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
     <link rel="stylesheet" th:href="@{/css/components/book.css}">
+    <link rel="stylesheet" th:href="@{/css/components/auth.css}">
+    <link rel="stylesheet" th:href="@{/css/components/footer.css}">
+    <link rel="stylesheet" th:href="@{/css/components/toolbar.css}">
     <link rel="stylesheet" th:href="@{/css/pages/profile.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
 </head>
 <body>
-    <header th:replace="fragments/toolbar :: toolbar"></header>
-
+<div th:replace="~{fragments/toolbar :: header}"></div>
     <div class="profile-container">
+
         <div class="profile-header">
             <div class="avatar-large" 
-                 th:text="${#strings.substring(user.username,0,1).toUpperCase()}"></div>
-            <h1 th:text="${user.username}"></h1>
-            <p th:text="${user.email}"></p>
+                 th:text="${#strings.substring(user.displayName,0,1).toUpperCase()}"></div>
+            <h1 th:text="${user.displayName}"></h1>
+            <p th:text="${userCredentials.email}"></p>
         </div>
 
-        <div class="profile-section">
-            <h2><i class="fas fa-book"></i> Borrowed Books</h2>
-            <div class="book-grid compact">
-                <div th:each="book : ${borrowedBooks}" class="book-card">
-                    <div class="book-cover">
-                        <img th:src="@{'/images/' + ${book.imageUrl}}" alt="Book Cover">
-                    </div>
-                    <div class="book-info">
-                        <h3 th:text="${book.title}"></h3>
-                        <p class="due-date" 
-                           th:text="'Due: ' + ${#temporals.format(book.dueDate, 'MMM dd, yyyy')}"></p>
-                    </div>
-                </div>
-            </div>
-        </div>
+<!--        <div class="profile-section">-->
+<!--            <h2><i class="fas fa-book"></i> Borrowed Books</h2>-->
+<!--            <div class="book-grid compact">-->
+<!--                <div th:each="book : ${books}" class="book-card">-->
+<!--                    <div class="book-cover">-->
+<!--                        <img th:src="@{'/images/' + ${book.imageUrl}}" alt="Book Cover">-->
+<!--                    </div>-->
+<!--                    <div class="book-info">-->
+<!--                        <h3 th:text="${book.title}"></h3>-->
+<!--                        <p class="due-date" -->
+<!--                           th:text="'Due: ' + ${#temporals.format(book.dueDate, 'MMM dd, yyyy')}"></p>-->
+<!--                    </div>-->
+<!--                </div>-->
+<!--            </div>-->
+<!--        </div>-->
 
-        <div class="profile-section">
-            <h2><i class="fas fa-heart"></i> Favorites</h2>
-            <div class="book-grid compact">
-                <div th:each="book : ${favoriteBooks}" class="book-card">
-                    <div class="book-cover">
-                        <img th:src="@{'/images/' + ${book.imageUrl}}" alt="Book Cover">
-                    </div>
-                    <div class="book-info">
-                        <h3 th:text="${book.title}"></h3>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
+<div th:replace="~{fragments/footer :: footer}"></div>
 
-    <footer th:replace="fragments/footer :: footer"></footer>
-
-    <script th:src="@{/js/main.js}"></script>
-    <script th:src="@{/js/profile-avatar.js}"></script>
+<script th:src="@{/js/toolbar.js}"></script>
+<script th:src="@{/js/profile-avatar.js}"></script>
+<script th:src="@{/js/api-protected-endpoint.js}"></script>
 </body>
 </html>

@@ -2,13 +2,12 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <title>Contact Us | Library System</title>
+    <link rel="stylesheet" th:href="@{/css/base.css}">
     <link rel="stylesheet" th:href="@{/css/components/toolbar.css}">
     <link rel="stylesheet" th:href="@{/css/components/footer.css}">
     <link rel="stylesheet" th:href="@{/css/pages/contact.css}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link rel="stylesheet" th:href="@{/css/base.css}">
 
-    <script th:src="@{/js/jwt-token.js}"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 <div th:replace="~{fragments/toolbar :: header}"></div>
@@ -79,6 +78,7 @@
 <div th:replace="~{fragments/footer :: footer}"></div>
 
 <script th:src="@{/js/contact.js}"></script>
+<script th:src="@{/js/jwt-token.js}"></script>
 <script th:src="@{/js/toolbar.js}"></script>
 <script th:src="@{/js/api-protected-endpoint.js}"></script>
 <script th:src="@{/js/profile-avatar.js}"></script>

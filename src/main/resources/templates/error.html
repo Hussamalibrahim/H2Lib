@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title th:text="'Error ' + ${statusCode} + ' - ' + ${title}">Error</title>
+    <link rel="stylesheet" th:href="@{/css/errorStyle.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+<div class="error-container" th:class="'error-' + ${statusCode}">
+    <div class="error-icon" th:text="${icon}">⚠️</div>
+    <h1 th:text="${statusCode}">500</h1>
+    <h2 th:text="${title}">Internal Server Error</h2>
+    <p th:text="${message}">Something went wrong</p>
+
+    <!-- Validation errors -->
+    <div th:if="${fieldErrors}" class="error-details">
+        <h3>Validation Errors:</h3>
+        <ul>
+            <li th:each="err : ${fieldErrors}" th:text="${err.key + ': ' + err.value}"></li>
+        </ul>
+    </div>
+
+    <!-- Countdown timer for 423 / 429 -->
+    <div th:if="${countdownSeconds}" class="countdown-container">
+        <p th:text="'Retry in ' + ${countdownSeconds} + ' seconds'">Retry in 30 seconds</p>
+        <div class="progress-bar">
+            <div class="progress" id="progress"></div>
+        </div>
+    </div>
+
+    <!-- Action buttons -->
+    <div class="error-actions">
+        <a th:href="${homeLink != null ? homeLink : '/'}" class="error-btn primary">Home</a>
+        <a th:if="${retryLink}" th:href="${retryLink}" class="error-btn secondary">Retry Now</a>
+        <a th:if="${loginLink}" th:href="${loginLink}" class="error-btn secondary">Login</a>
+    </div>
+</div>
+
+<script th:src="@{/js/errorCountdown.js}"></script>
+<script th:inline="javascript">
+    /*[[${countdownSeconds}]]*/
+    var countdownSeconds = /*[[${countdownSeconds}]]*/ 0;
+</script>
+</body>
+</html>

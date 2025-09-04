@@ -2,8 +2,8 @@
 <html xmlns:th="http://www.thymeleaf.org" lang="en">
 <head>
     <title>Account Settings</title>
-    <link rel="stylesheet" th:href="@{/css/components/toolbar.css}">
     <link rel="stylesheet" th:href="@{/css/base.css}">
+    <link rel="stylesheet" th:href="@{/css/components/toolbar.css}">
     <link rel="stylesheet" th:href="@{/css/components/footer.css}">
     <link rel="stylesheet" th:href="@{/css/components/auth.css}">
     <link rel="stylesheet" th:href="@{/css/pages/settings.css}">
@@ -102,7 +102,9 @@
 
 <div th:replace="~{fragments/footer :: footer}"></div>
 
+<script th:src="@{/js/profile-avatar.js}"></script>
+<script th:src="@{/js/toolbar.js}"></script>
+<script th:src="@{/js/jwt-token.js}"></script>
 <script th:src="@{/js/settings.js}"></script>
-<script th:src="@{/js/account-settings.js}"></script>
 </body>
 </html>

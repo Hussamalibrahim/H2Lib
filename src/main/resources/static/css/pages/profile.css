@@ -35,9 +35,8 @@
     gap: 10px;
 }
 
-@media (max-width: 768px) {
-    .profile-container {
-        margin-left: 0;
-        padding: 20px;
-    }
-}
+    @media (max-width: 768px) {
+        .profile-page {
+            padding: 1rem;
+        }
+        }

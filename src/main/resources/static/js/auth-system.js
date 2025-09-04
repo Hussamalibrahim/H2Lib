@@ -57,14 +57,13 @@ async function handleLoginForm(form) {
         } else if (data.fieldErrors) {
             displayFieldErrors(form, data.fieldErrors);
         } else {
-            showError(data.message || "Login failed");
+            showFlashMessage(data.message || "Login failed", "danger");
         }
     } catch (err) {
         console.error("Login error:", err);
-        showError("Error: " + err.message);
+        showFlashMessage("Error: " + err.message, "danger");
     }
 }
-
 
 async function handleRegistrationForm(form) {
     const name = document.getElementById('registerName').value.trim();
@@ -72,9 +71,8 @@ async function handleRegistrationForm(form) {
     const password = document.getElementById('registerPassword').value;
     const confirmPassword = document.getElementById('registerConfirmPassword').value;
 
-    // Local validation
     if (password !== confirmPassword) {
-        showFieldError('confirmError', 'Passwords do not match');
+        showFlashMessage('Passwords do not match', 'danger');
         return;
     }
 
@@ -87,29 +85,26 @@ async function handleRegistrationForm(form) {
 
         const data = await response.json();
         if (data.success) {
-            showSuccess("Account created successfully!");
-            // Save token & redirect (just like login)
+            showFlashMessage("Account created successfully!", "success");
             handleSuccessfulLogin(data.token, data.redirectUrl);
         } else if (data.fieldErrors) {
             displayFieldErrors(form, data.fieldErrors);
         } else {
-            showError(data.message || "Registration failed");
+            showFlashMessage(data.message || "Registration failed", "danger");
         }
     } catch (err) {
         console.error("Registration error:", err);
-        showError("Error: " + err.message);
+        showFlashMessage("Error: " + err.message, "danger");
     }
 }
 
-
-// ==================== VALIDATION FUNCTIONS ====================
+// ==================== VALIDATION & PASSWORD STRENGTH ====================
 
 function updatePasswordStrength() {
     const password = document.getElementById('registerPassword').value;
     const strengthMeter = document.querySelector('.strength-meter');
     const feedback = document.getElementById('strengthFeedback');
 
-    // Reset
     strengthMeter.style.width = '0%';
     strengthMeter.style.backgroundColor = 'transparent';
     feedback.textContent = '';
@@ -154,45 +149,24 @@ function displayFieldErrors(form, fieldErrors) {
     }
 }
 
-function showFieldError(fieldId, message) {
-    const field = document.getElementById(fieldId);
-    if (field) {
-        field.innerText = message;
-        field.style.display = "block";
-    } else {
-        alert(message);
-    }
+// ==================== FLASH MESSAGES ====================
+
+function showFlashMessage(message, type = "danger") {
+    const flashDiv = document.getElementById("flashMessage");
+    const flashText = document.getElementById("flashMessageText");
+    if (!flashDiv || !flashText) return;
+
+    flashDiv.className = `alert alert-${type}`;
+    flashText.textContent = message;
+    flashDiv.style.display = "block";
+
+    setTimeout(() => {
+        flashDiv.style.display = "none";
+        flashText.textContent = "";
+    }, 5000);
 }
 
-function showError(message) {
-    const errorDiv = document.getElementById("errorMessage");
-    if (errorDiv) {
-        errorDiv.innerText = message;
-        errorDiv.style.display = "block";
-    } else {
-        alert(message);
-    }
-}
-
-function showSuccess(message) {
-    const successDiv = document.getElementById("successMessage");
-    if (successDiv) {
-        successDiv.innerText = message;
-        successDiv.style.display = "block";
-    } else {
-        alert(message);
-    }
-}
-
-function showMessage(message, type) {
-    const flash = document.getElementById("flashMessage");
-    if (flash) {
-        flash.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
-        setTimeout(() => flash.innerHTML = "", 5000);
-    } else {
-        alert(message);
-    }
-}
+// ==================== LOGIN SUCCESS ====================
 
 function handleSuccessfulLogin(token, redirectUrl) {
     localStorage.setItem("jwtToken", token);

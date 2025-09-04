@@ -5,13 +5,11 @@
 <body>
 <header class="toolbar" id="main-toolbar" th:fragment="header">
     <div class="toolbar-content">
-        <!-- Logo on the left -->
         <a th:href="@{/}" class="toolbar-logo">
             <i class="fas fa-book-open"></i>
             <span>Library</span>
         </a>
 
-        <!-- Auth section on the right -->
         <div class="auth-section" th:unless="${#authorization.expression('isAuthenticated()')}">
             <a th:href="@{/login}" class="auth-btn login">Login</a>
             <a th:href="@{/register}" class="auth-btn signup">Sign Up</a>
@@ -19,7 +17,6 @@
 
         <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
 
-        <!-- User avatar on the right when logged in -->
         <div class="auth-section" th:if="${#authorization.expression('isAuthenticated()')}">
             <div class="user-avatar" id="userAvatar"
                  th:attr="data-username=${#authentication.name},
