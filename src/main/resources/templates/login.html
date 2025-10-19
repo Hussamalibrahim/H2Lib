@@ -28,8 +28,9 @@
 
         <div th:if="${param.error}" class="alert alert-danger">
             <span th:text="${param.error}">Error message</span>
-            <span th:if="${param.code == '423'}" class="unlock-time">
-                (until <span th:text="${param.accountLockedUntil}">time</span>)
+            <span th:if="${param.code == '423'}" class="unlock-time">(until
+                <span th:text="${param.accountLockedUntil}">time
+                </span>)
             </span>
         </div>
 

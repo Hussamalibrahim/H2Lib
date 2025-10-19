@@ -16,6 +16,8 @@ public interface UserPrincipal extends UserDetails, OAuth2User, Serializable {
 
     Users getUsers();
 
+     UserCredentials getUsersCredentials() ;
+
     // could be static
      UserPrincipalImp  create(UserCredentials user, Map<String, Object> attributes);
 

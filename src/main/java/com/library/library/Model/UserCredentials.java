@@ -42,8 +42,8 @@ public class UserCredentials {
     @Column(name = "enabled", columnDefinition = "BOOLEAN DEFAULT TRUE")
     private Boolean enabled = true;
 
-//    @Column(name = "deleted", columnDefinition = "BOOLEAN DEFAULT FALSE")
-//    private Boolean deleted;
+    @Column(name = "expired", columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private Boolean expired;
 
     @Column(name = "email_verified", columnDefinition = "BOOLEAN DEFAULT FALSE")
     private Boolean emailVerified = false;
@@ -74,6 +74,10 @@ public class UserCredentials {
 
     public boolean isPermanentlyLocked() {
         return Boolean.TRUE.equals(locked);
+    }
+
+    public boolean isAccountExpired() {
+        return Boolean.TRUE.equals(expired);
     }
 
     public void addProvider(String provider) {

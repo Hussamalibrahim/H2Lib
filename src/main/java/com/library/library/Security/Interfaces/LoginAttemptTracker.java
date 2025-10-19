@@ -14,4 +14,5 @@ public interface LoginAttemptTracker {
 
     int getRemainingAttempts(String email);
 
+    boolean isAccountDeleted(String email);
 }

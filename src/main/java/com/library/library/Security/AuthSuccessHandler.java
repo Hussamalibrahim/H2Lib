@@ -51,6 +51,9 @@ public class AuthSuccessHandler implements AuthenticationSuccessHandler {
     private void updateUserFromOAuthAttributes(UserPrincipal principal) {
         Map<String, Object> attributes = principal.getAttributes();
 
+        attributes.forEach((e , p )-> log.info(e + p.toString()));
+        principal.getUsersCredentials().setEmailVerified(true);
+
         if (principal.getUsers() != null) {
             // Update display name if not set
             if (principal.getUsers().getDisplayName() == null) {

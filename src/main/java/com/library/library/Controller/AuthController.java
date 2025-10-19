@@ -5,13 +5,11 @@ import com.library.library.Model.Dto.RegistrationDto;
 import com.library.library.Security.JWT.JwtService;
 import com.library.library.Security.UserPrincipal;
 import com.library.library.Service.UserCredentialsService;
-import com.library.library.Service.UserService;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -21,8 +19,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.time.Instant;
 
 @Slf4j
 @Controller
@@ -39,6 +38,8 @@ public class AuthController {
 
     @GetMapping("/login")
     public String loginPage(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        // make it aop if user logged in
+        // one condition is enough
         if (userPrincipal != null && userPrincipal.isOAuth2User()) {
             return "redirect:/";
         }
@@ -48,7 +49,6 @@ public class AuthController {
 
     @GetMapping("/register")
     public String registerPage(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-
         if (userPrincipal != null && userPrincipal.isOAuth2User()) {
             return "redirect:/";
         }
@@ -70,8 +70,27 @@ public class AuthController {
                             RedirectAttributes redirectAttributes,
                             HttpServletResponse response) {
         try {
+            String email = loginRequest.getEmail();
+
+            // Account lock check
+            if(userCredentialsService.isAccountLocked(email)) {
+                redirectAttributes.addAttribute("error", "Account locked");
+                redirectAttributes.addAttribute("code", 423); // HTTP 423 Locked
+                redirectAttributes.addAttribute("accountLockedUntil",
+                        userCredentialsService.getLockedUntil(email));
+                return "redirect:/login";
+            }
+            if(userCredentialsService.isAccountDeleted(email)) {
+                redirectAttributes.addAttribute("error", "Account locked");
+                redirectAttributes.addAttribute("code", 423); // HTTP 423 Locked
+                redirectAttributes.addAttribute("accountLockedUntil",
+                        userCredentialsService.getLockedUntil(email));
+                return "redirect:/login";
+            }
             Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getPassword(), loginRequest.getPassword())
+                    new UsernamePasswordAuthenticationToken(
+                            loginRequest.getEmail(),
+                            loginRequest.getPassword())
             );
 
             SecurityContextHolder.getContext().setAuthentication(authentication);

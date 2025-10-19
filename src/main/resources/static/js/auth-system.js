@@ -114,7 +114,6 @@ async function handleRegistrationForm(form) {
             return;
         }
 
-        // Submit form
         const response = await authenticatedFetch('/register-back', {
             method: 'POST',
             body: JSON.stringify({

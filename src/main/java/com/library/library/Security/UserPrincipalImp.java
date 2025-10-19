@@ -64,8 +64,14 @@ public class UserPrincipalImp implements UserPrincipal {
     }
 
     @Override
+    public UserCredentials getUsersCredentials() {
+        return userCredentials;
+    }
+
+    @Override
     public boolean isAccountNonExpired() {
-        return userCredentials != null && userCredentials.getRole() != Role.EXPIRED;
+        return userCredentials != null && userCredentials.getRole() != Role.EXPIRED ||
+                userCredentials != null && !userCredentials.isAccountExpired();
     }
 
 
@@ -79,22 +85,23 @@ public class UserPrincipalImp implements UserPrincipal {
     public boolean isCredentialsNonExpired() {
         return userCredentials != null && (
                 userCredentials.getPasswordChangedAt() == null ||
-                        userCredentials.getPasswordChangedAt().isAfter(Instant.now().minus(90, ChronoUnit.DAYS))
+                        userCredentials.getPasswordChangedAt()
+                                .isAfter(Instant.now().minus(90, ChronoUnit.DAYS))
         );
     }
 
     @Override
     public boolean isEnabled() {
         // For OAuth users, skip email verification
-//        if (isOAuth2User()) {
-//            return userCredentials != null &&
-//                    Boolean.TRUE.equals(userCredentials.getEnabled());
-//        }
-//        // For regular users, require email verification
-//        return userCredentials != null &&
-//                Boolean.TRUE.equals(userCredentials.getEnabled()) &&
-//                Boolean.TRUE.equals(userCredentials.getEmailVerified());
-        return true;
+        if (isOAuth2User()) {
+            return userCredentials != null &&
+                    Boolean.TRUE.equals(userCredentials.getEnabled());
+        }
+        // For regular users, require email verification
+        return userCredentials != null &&
+                Boolean.TRUE.equals(userCredentials.getEnabled()) &&
+                Boolean.TRUE.equals(userCredentials.getEmailVerified());
+//        return true;
     }
 
     @Override
