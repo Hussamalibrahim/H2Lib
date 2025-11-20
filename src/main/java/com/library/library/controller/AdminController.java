@@ -10,8 +10,6 @@ import org.springframework.web.bind.annotation.RestController;
 @PreAuthorize("hasRole('ADMIN')")
 @RequestMapping("admin")
 public class AdminController {
-    //  /admin
-    // admin could
     //  /admin + user / to get the user can pend
     //  /admin + book / book request
     //  /admin + author / author request of changing

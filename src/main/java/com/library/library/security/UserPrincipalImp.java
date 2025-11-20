@@ -9,10 +9,8 @@ import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+
 @Component
 public class UserPrincipalImp implements UserPrincipal {
 
@@ -43,7 +41,7 @@ public class UserPrincipalImp implements UserPrincipal {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return List.of(new SimpleGrantedAuthority("ROLE_" + userCredentials.getRole().name()));
+        return List.of(new SimpleGrantedAuthority("ROLE_" + Objects.requireNonNull(userCredentials).getRole().name()));
     }
 
     @Override

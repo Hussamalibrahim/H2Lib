@@ -7,9 +7,7 @@ import com.library.library.security.UserPrincipalImp;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -23,11 +21,13 @@ import java.util.stream.Collectors;
 @Service
 public class JwtService {
 
-    @Autowired
-    private JwtProperties jwtProperties;
+    private final JwtProperties jwtProperties;
+    private final UserCredentialsRepository userCredentialsRepository;
 
-    @Autowired
-    private UserCredentialsRepository userCredentialsRepository;
+    public JwtService(JwtProperties jwtProperties, UserCredentialsRepository userCredentialsRepository) {
+        this.jwtProperties = jwtProperties;
+        this.userCredentialsRepository = userCredentialsRepository;
+    }
 
     public String generateToken(UserPrincipal userPrincipal) {
         Map<String, Object> extraClaims = new HashMap<>();
@@ -42,6 +42,7 @@ public class JwtService {
                 .setExpiration(new Date(System.currentTimeMillis() + jwtProperties.getAccessTokenExpiration()))
                 .signWith(getSignInKey(), SignatureAlgorithm.HS256)
                 .compact();
+
     }
 
     public boolean isTokenValid(String token) {
@@ -77,13 +78,6 @@ public class JwtService {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-    }
-
-    public Collection<? extends GrantedAuthority> extractAuthorities(String token) {
-        Claims claims = extractAllClaims(token);
-        @SuppressWarnings("unchecked")
-        List<String> authorities = claims.get("authorities", List.class);
-        return authorities.stream().map(SimpleGrantedAuthority::new).collect(Collectors.toList());
     }
 
     public UserPrincipal getPrincipalFromToken(String token) {

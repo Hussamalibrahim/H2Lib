@@ -31,6 +31,7 @@ public class GoogleDriveConfig {
 
     @Bean
     public Drive driveService() throws GeneralSecurityException, IOException {
+
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         GoogleCredentials credentials = GoogleCredentials.fromStream(credentialsFile.getInputStream())
                 .createScoped(SCOPES);

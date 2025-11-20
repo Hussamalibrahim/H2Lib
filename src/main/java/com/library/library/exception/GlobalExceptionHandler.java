@@ -12,7 +12,9 @@ import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -35,6 +37,7 @@ import javax.naming.ServiceUnavailableException;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -44,22 +47,52 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    private boolean isAjaxRequest(HttpServletRequest request) {
-        String accept = request.getHeader("Accept");
-        String xRequestedWith = request.getHeader("X-Requested-With");
-        return (accept != null && accept.contains("application/json")) || "XMLHttpRequest".equals(xRequestedWith);
+    private String sanitize(String input) {
+        if (input == null) return "";
+        return input
+                .replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#39;")
+                .trim();
     }
 
-    private boolean isHtmlRequest(HttpServletRequest request) {
-        String acceptHeader = request.getHeader("Accept");
-        return acceptHeader != null && acceptHeader.contains("text/html");
+
+    private HttpHeaders buildSecureHeaders() {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-Content-Type-Options", "nosniff");
+        headers.set("X-Frame-Options", "DENY");
+        headers.set("Referrer-Policy", "no-referrer");
+        headers.set("Content-Security-Policy", "default-src 'none'; frame-ancestors 'none'; base-uri 'none';");
+        return headers;
     }
 
-    private ResponseEntity<ErrorResponseDto> buildJsonResponse(HttpStatus status, HttpServletRequest request, String message, Map<String, Object> details) {
-        ErrorResponseDto error = ErrorResponseDto.create(status, request.getRequestURI(), message);
-        if (details != null) details.forEach(error::addDetail);
-        return ResponseEntity.status(status).body(error);
+    private ResponseEntity<ErrorResponseDto> buildJsonResponse(
+            HttpStatus status,
+            HttpServletRequest request,
+            String message,
+            Map<String, Object> details
+    ) {
+        HttpHeaders headers = buildSecureHeaders();
+
+        String safePath = request.toString();
+        String safeMessage = sanitize(message);
+
+        ErrorResponseDto dto = ErrorResponseDto.create(status, safePath, safeMessage);
+
+        if (details != null) {
+            Map<String, Object> safeDetails = new HashMap<>();
+            details.forEach((k, v) -> safeDetails.put(sanitize(k), sanitize(v != null ? v.toString() : "")));
+            dto.setDetails(safeDetails);
+        }
+
+        return ResponseEntity.status(status)
+                .headers(headers)
+                .body(dto);
     }
+
 
     // 400 - Validation Errors
     @ExceptionHandler({
@@ -70,23 +103,31 @@ public class GlobalExceptionHandler {
             ConstraintViolationException.class,
             MethodArgumentTypeMismatchException.class
     })
-    public ResponseEntity<ErrorResponseDto> handleValidationErrors(Exception ex, HttpServletRequest request) {
-        Map<String, String> fieldErrors = null;
+    public ResponseEntity<ErrorResponseDto> handleValidationErrors(
+            Exception ex,
+            HttpServletRequest request
+    ) {
+
+        Map<String, String> fieldErrors = new HashMap<>();
 
         if (ex instanceof MethodArgumentNotValidException manv) {
             fieldErrors = manv.getBindingResult().getFieldErrors()
                     .stream()
                     .collect(Collectors.toMap(
                             FieldError::getField,
-                            e -> e.getDefaultMessage() != null ? e.getDefaultMessage() : "Invalid value"
+                            e -> e.getDefaultMessage() != null ? e.getDefaultMessage() : "Invalid value",
+                            (a, b) -> a
                     ));
         } else if (ex instanceof BindException be) {
             fieldErrors = be.getBindingResult().getFieldErrors()
                     .stream()
                     .collect(Collectors.toMap(
                             FieldError::getField,
-                            e -> e.getDefaultMessage() != null ? e.getDefaultMessage() : "Invalid value"
+                            e -> e.getDefaultMessage() != null ? e.getDefaultMessage() : "Invalid value",
+                            (a, b) -> a
                     ));
+        } else if (ex instanceof MissingServletRequestParameterException msrp) {
+            fieldErrors = Map.of(msrp.getParameterName(), "Missing required parameter");
         } else if (ex instanceof HttpMessageNotReadableException) {
             fieldErrors = Map.of("body", "Malformed or unreadable request body");
         } else if (ex instanceof ConstraintViolationException cve) {
@@ -94,15 +135,22 @@ public class GlobalExceptionHandler {
                     .stream()
                     .collect(Collectors.toMap(
                             v -> v.getPropertyPath().toString(),
-                            ConstraintViolation::getMessage
+                            ConstraintViolation::getMessage,
+                            (a, b) -> a
                     ));
         } else if (ex instanceof MethodArgumentTypeMismatchException me) {
-            fieldErrors = Map.of(me.getName(), "Type mismatch. Expected " + me.getRequiredType());
+            fieldErrors = Map.of(
+                    me.getName(),
+                    "Type mismatch. Expected: " + (me.getRequiredType() != null ? me.getRequiredType().getSimpleName() : "unknown")
+            );
         }
 
-        ErrorResponseDto error = ErrorResponseDto.create(HttpStatus.BAD_REQUEST, request.getRequestURI(), "Validation failed");
-        if (fieldErrors != null) error.setFieldErrors(fieldErrors);
-        return ResponseEntity.badRequest().body(error);
+        Map<String, Object> details = new HashMap<>();
+        if (!fieldErrors.isEmpty()) {
+            details.put("fieldErrors", fieldErrors);
+        }
+
+        return buildJsonResponse(HttpStatus.BAD_REQUEST, request, "Validation failed", details);
     }
 
     // 401 - Unauthorized
@@ -125,7 +173,8 @@ public class GlobalExceptionHandler {
     // 403 - Forbidden
     @ExceptionHandler(org.springframework.security.access.AccessDeniedException.class)
     public ResponseEntity<ErrorResponseDto> handleAccessDenied(org.springframework.security.access.AccessDeniedException ex, HttpServletRequest request) {
-        return buildJsonResponse(HttpStatus.FORBIDDEN, request, "Access denied: " + ex.getMessage(), null);
+        // do not leak the exception message; send generic
+        return buildJsonResponse(HttpStatus.FORBIDDEN, request, "Access denied" + ex.getMessage(), null);
     }
 
     // 404 - Not Found
@@ -137,13 +186,13 @@ public class GlobalExceptionHandler {
     // 405 - Method Not Allowed
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<ErrorResponseDto> handleMethodNotAllowed(HttpRequestMethodNotSupportedException ex, HttpServletRequest request) {
-        return buildJsonResponse(HttpStatus.METHOD_NOT_ALLOWED, request, "HTTP method not supported for this endpoint", Map.of("supportedMethods", ex.getSupportedHttpMethods()));
+        return buildJsonResponse(HttpStatus.METHOD_NOT_ALLOWED, request, "HTTP method not supported for this endpoint" + ex.getMessage(), null);
     }
 
     // 408 - Request Timeout
     @ExceptionHandler(AsyncRequestTimeoutException.class)
     public ResponseEntity<ErrorResponseDto> handleRequestTimeout(AsyncRequestTimeoutException ex, HttpServletRequest request) {
-        return buildJsonResponse(HttpStatus.REQUEST_TIMEOUT, request, "Request timed out", null);
+        return buildJsonResponse(HttpStatus.REQUEST_TIMEOUT, request, "Request timed out" + ex.getMessage(), null);
     }
 
     // 413 - Payload Too Large
@@ -155,7 +204,7 @@ public class GlobalExceptionHandler {
     // 415 - Unsupported Media Type
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public ResponseEntity<ErrorResponseDto> handleUnsupportedMediaType(HttpMediaTypeNotSupportedException ex, HttpServletRequest request) {
-        return buildJsonResponse(HttpStatus.UNSUPPORTED_MEDIA_TYPE, request, "Unsupported media type: " + ex.getContentType(), null);
+        return buildJsonResponse(HttpStatus.UNSUPPORTED_MEDIA_TYPE, request, "Unsupported media type", Map.of("contentType", String.valueOf(ex.getContentType())));
     }
 
     // 406 - Not Acceptable
@@ -167,7 +216,7 @@ public class GlobalExceptionHandler {
     // 422 - Unprocessable Entity
     @ExceptionHandler(HttpClientErrorException.UnprocessableEntity.class)
     public ResponseEntity<ErrorResponseDto> handleUnprocessableEntity(HttpClientErrorException.UnprocessableEntity ex, HttpServletRequest request) {
-        return buildJsonResponse(HttpStatus.UNPROCESSABLE_ENTITY, request, "Unprocessable Entity: " + ex.getMessage(), null);
+        return buildJsonResponse(HttpStatus.UNPROCESSABLE_ENTITY, request, "Unprocessable entity" + ex.getMessage(), null);
     }
 
     // 423 - Account Locked
@@ -175,41 +224,48 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponseDto> handleAccountLocked(AccountLockedException ex, HttpServletRequest request) {
         Map<String, Object> details = Map.of(
                 "locked_until", ex.getLockedUntil().toString(),
-                "remaining_time_minutes", Duration.between(Instant.now(), ex.getLockedUntil()).toMinutes(),
+                "remaining_time_minutes", Math.max(0, Duration.between(Instant.now(), ex.getLockedUntil()).toMinutes()),
                 "action", "Please try again later or contact support"
         );
-        return buildJsonResponse(HttpStatus.LOCKED, request, "Account temporarily locked due to too many failed attempts", details);
+        return buildJsonResponse(HttpStatus.LOCKED, request, "Account temporarily locked", details);
     }
 
     // 429 - Rate Limit Exceeded
     @ExceptionHandler(RateLimitExceededException.class)
     public ResponseEntity<ErrorResponseDto> handleRateLimitExceeded(RateLimitExceededException ex, HttpServletRequest request) {
-        return buildJsonResponse(HttpStatus.TOO_MANY_REQUESTS, request, ex.getMessage(), null);
+        // use safe message from exception but sanitize in builder
+        return buildJsonResponse(HttpStatus.TOO_MANY_REQUESTS, request, "Rate limit exceeded" + ex.getMessage(), null);
     }
 
     // 409 - Conflict / Data Integrity
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<ErrorResponseDto> handleConflict(DataIntegrityViolationException ex, HttpServletRequest request) {
-        String msg = ex.getRootCause() != null ? ex.getRootCause().getMessage() : "Data integrity violation";
-        return buildJsonResponse(HttpStatus.CONFLICT, request, msg, null);
+        // avoid returning DB internal messages to client
+        return buildJsonResponse(HttpStatus.CONFLICT, request, "Data conflict or integrity error" + ex.getMessage(), null);
     }
 
     // File Extension Errors
     @ExceptionHandler({InvalidFileExtensionException.class, MissingFileExtensionException.class})
     public ResponseEntity<ErrorResponseDto> handleFileExtensionErrors(RuntimeException ex, HttpServletRequest request) {
-        return buildJsonResponse(HttpStatus.UNSUPPORTED_MEDIA_TYPE, request, "File validation error: " + ex.getMessage(), null);
+        return buildJsonResponse(HttpStatus.UNSUPPORTED_MEDIA_TYPE, request, "File validation error" +  ex.getMessage(), null);
     }
 
     // 500 / Internal Server Error
-    @ExceptionHandler({Exception.class, DriveException.class, SQLException.class, DataAccessException.class})
+    @ExceptionHandler({DriveException.class, SQLException.class, DataAccessException.class})
     public ResponseEntity<ErrorResponseDto> handleServerErrors(Exception ex, HttpServletRequest request) {
-        return buildJsonResponse(HttpStatus.INTERNAL_SERVER_ERROR, request,
-                ex.getMessage() != null ? ex.getMessage() : "Internal server error", null);
+        // do not send ex.getMessage() to client; send generic message and log exception server-side
+        return buildJsonResponse(HttpStatus.INTERNAL_SERVER_ERROR, request, "Internal server error" + ex.getMessage() , null);
+    }
+
+    // catch-all (for any remaining exceptions)
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ErrorResponseDto> handleGenericException(Exception ex, HttpServletRequest request) {
+        return buildJsonResponse(HttpStatus.INTERNAL_SERVER_ERROR, request, "Unexpected error" + ex.getMessage(), null);
     }
 
     // 503 - Service Unavailable
     @ExceptionHandler(ServiceUnavailableException.class)
     public ResponseEntity<ErrorResponseDto> handleServiceUnavailable(ServiceUnavailableException ex, HttpServletRequest request) {
-        return buildJsonResponse(HttpStatus.SERVICE_UNAVAILABLE, request, "Service Unavailable: " + ex.getMessage(), null);
+        return buildJsonResponse(HttpStatus.SERVICE_UNAVAILABLE, request, "Service unavailable" + ex.getMessage(), null);
     }
 }

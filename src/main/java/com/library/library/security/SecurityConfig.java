@@ -1,8 +1,8 @@
 package com.library.library.security;
 
 import com.library.library.exception.infrastructure.AccountLockedException;
-import com.library.library.security.interfaces.LoginAttemptTracker;
 import com.library.library.security.JWT.JwtService;
+import com.library.library.security.interfaces.LoginAttemptTracker;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -38,23 +38,23 @@ import java.time.temporal.ChronoUnit;
 @EnableWebSecurity
 public class SecurityConfig {
 
-    @Autowired
-    private RememberMeProperties rememberMeProperties;
+    private final RememberMeProperties rememberMeProperties;
+    private final UserDetailsService userDetailsService;
+    private final CustomAuthFilter customAuthFilter;
+    private final JwtService jwtService;
+    private final LogoutService logoutService;
+    private final OAuth2UserService<OAuth2UserRequest, OAuth2User> authUserService;
+    private final LoginAttemptTracker loginAttemptService;
 
-    @Autowired
-    private UserDetailsService userDetailsService;
-
-    @Autowired
-    private CustomAuthFilter customAuthFilter;
-
-    @Autowired
-    private JwtService jwtService;
-
-    @Autowired
-    LogoutService logoutService;
-
-    @Autowired
-    private LoginAttemptTracker loginAttemptService;
+    public SecurityConfig(RememberMeProperties rememberMeProperties, UserDetailsService userDetailsService, CustomAuthFilter customAuthFilter, JwtService jwtService, LogoutService logoutService, OAuth2UserService<OAuth2UserRequest, OAuth2User> authUserService, LoginAttemptTracker loginAttemptService) {
+        this.rememberMeProperties = rememberMeProperties;
+        this.userDetailsService = userDetailsService;
+        this.customAuthFilter = customAuthFilter;
+        this.jwtService = jwtService;
+        this.logoutService = logoutService;
+        this.authUserService = authUserService;
+        this.loginAttemptService = loginAttemptService;
+    }
 
 
     @Bean
@@ -131,7 +131,7 @@ public class SecurityConfig {
                 // OAuth2 Login
                 .oauth2Login(oauth -> oauth
                         .loginPage("/login")
-                        .userInfoEndpoint(user -> user.userService(auth2UserService()))
+                        .userInfoEndpoint(user -> user.userService(authUserService))
                         .successHandler(authenticationSuccessHandler())
                         .failureHandler(authenticationFailureHandler())
                 )
@@ -267,7 +267,7 @@ public class SecurityConfig {
 
     @Bean
     public AuthenticationSuccessHandler authenticationSuccessHandler() {
-        return new AuthSuccessHandler();
+        return new AuthSuccessHandler(jwtService);
     }
 
     @Bean
@@ -280,8 +280,4 @@ public class SecurityConfig {
         return new AuthFailureHandler();
     }
 
-    @Bean
-    public OAuth2UserService<OAuth2UserRequest, OAuth2User> auth2UserService() {
-        return new com.library.library.security.OAuth2UserService();
-    }
 }

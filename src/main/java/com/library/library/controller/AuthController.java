@@ -5,7 +5,6 @@ import com.library.library.security.JWT.JwtService;
 import com.library.library.security.UserPrincipal;
 import com.library.library.service.UserCredentialsService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.*;
 import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
@@ -23,17 +22,19 @@ import java.util.Map;
 @Slf4j
 @Controller
 public class AuthController {
-    @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired
-    private JwtService jwtService;
-    @Autowired
-    private UserCredentialsService userCredentialsService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtService jwtService;
+    private final UserCredentialsService userCredentialsService;
+
+    public AuthController(AuthenticationManager authenticationManager, JwtService jwtService, UserCredentialsService userCredentialsService) {
+        this.authenticationManager = authenticationManager;
+        this.jwtService = jwtService;
+        this.userCredentialsService = userCredentialsService;
+    }
 
     @GetMapping("/login")
     public String loginPage(@AuthenticationPrincipal UserPrincipal userPrincipal) {
-        // make it aop if user logged in
-        // one condition is enough
+        //todo make it aop if user logged in one condition is enough
         if (userPrincipal != null && userPrincipal.isOAuth2User()) {
             return "redirect:/";
         }
@@ -42,6 +43,7 @@ public class AuthController {
 
     @GetMapping("/register")
     public String registerPage(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        //todo make it aop if user logged in one condition is enough
         if (userPrincipal != null && userPrincipal.isOAuth2User()) {
             return "redirect:/";
         }

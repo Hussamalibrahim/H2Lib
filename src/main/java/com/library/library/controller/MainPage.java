@@ -9,7 +9,6 @@ import com.library.library.service.BookService;
 import com.library.library.service.BookTypeService;
 import com.library.library.service.LibraryService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.MediaType;
@@ -25,15 +24,14 @@ import java.io.IOException;
 @Slf4j
 @Controller
 public class MainPage {
-
-    @Autowired
-    LibraryService libraryService;
-
-    @Autowired
-    BookTypeService bookTypeService;
-
-    @Autowired
-    BookService bookService;
+    final LibraryService libraryService;
+    final BookTypeService bookTypeService;
+    final BookService bookService;
+    public MainPage(LibraryService libraryService, BookTypeService bookTypeService, BookService bookService) {
+        this.libraryService = libraryService;
+        this.bookTypeService = bookTypeService;
+        this.bookService = bookService;
+    }
 
 
     @GetMapping(produces = {MediaType.TEXT_HTML_VALUE})
@@ -49,8 +47,6 @@ public class MainPage {
 
     @GetMapping("/post")
     public String pushBook(Model model, @ModelAttribute("book details ") BookDto bookDto, BookTypeDto bookTypeDto) {
-
-
         return "book-details";
     }
 

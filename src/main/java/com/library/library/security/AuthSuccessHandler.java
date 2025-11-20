@@ -2,6 +2,7 @@ package com.library.library.security;
 
 import com.library.library.security.JWT.JwtService;
 import com.library.library.Utils.TypeFiles;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -16,16 +17,22 @@ import org.springframework.security.web.savedrequest.DefaultSavedRequest;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URI;
+import java.time.Duration;
 import java.util.Map;
 
 @Slf4j
 @Component
 public class AuthSuccessHandler implements AuthenticationSuccessHandler {
 
-    @Autowired
-    private JwtService jwtService;
-
+    private final JwtService jwtService;
     private final RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
+    private final ObjectMapper mapper = new ObjectMapper();
+
+    @Autowired
+    public AuthSuccessHandler(JwtService jwtService) {
+        this.jwtService = jwtService;
+    }
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -38,45 +45,46 @@ public class AuthSuccessHandler implements AuthenticationSuccessHandler {
 
         setAuthCookies(request, response, jwt);
 
-        String acceptHeader = request.getHeader("Accept");
-        String xRequestedWith = request.getHeader("X-Requested-With");
-
-        boolean isAjax = (acceptHeader != null && acceptHeader.contains("application/json")) ||
-                "XMLHttpRequest".equals(xRequestedWith);
-
-
+        boolean isAjax = (request.getHeader("Accept") != null && request.getHeader("Accept").contains("application/json"))
+                || "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
 
         if (isAjax) {
+            // Return structured JSON
+            Map<String, Object> payload = Map.of(
+                    "success", true,
+                    "token", jwt,
+                    "redirectUrl", "/"
+            );
             response.setContentType("application/json");
             response.setCharacterEncoding("UTF-8");
-            response.getWriter().write("{\"success\":true,\"token\":\"" + jwt + "\",\"redirectUrl\":\"/\"}");
+            mapper.writeValue(response.getWriter(), payload);
             response.getWriter().flush();
-        } else {
-            handleRedirect(request, response);
+            return;
         }
+
+        handleRedirect(request, response);
     }
 
-
     private void updateUserFromOAuthAttributes(UserPrincipal principal) {
+        if (principal == null) return;
         Map<String, Object> attributes = principal.getAttributes();
+        if (attributes == null || attributes.isEmpty()) return;
 
-        attributes.forEach((e , p )-> log.info(e + p.toString()));
+        log.debug("OAuth attributes keys: {}", attributes.keySet());
+
         principal.getUsersCredentials().setEmailVerified(true);
 
         if (principal.getUsers() != null) {
             if (principal.getUsers().getDisplayName() == null) {
-                String name = (String) attributes.get("name");
-                if (name != null) {
+                Object nameObj = attributes.get("name");
+                if (nameObj instanceof String name && !name.isBlank()) {
                     principal.getUsers().setDisplayName(name);
                 }
             }
 
             if (principal.getUsers().getImageUrl() == null) {
-                String imageUrl = (String) attributes.get("picture");
-                if (imageUrl == null) {
-                    imageUrl = (String) attributes.get("avatar_url");
-                }
-                if (imageUrl != null) {
+                Object imageUrlObj = attributes.get("picture") != null ? attributes.get("picture") : attributes.get("avatar_url");
+                if (imageUrlObj instanceof String imageUrl && !imageUrl.isBlank()) {
                     principal.getUsers().setImageUrl(imageUrl);
                     principal.getUsers().setImageContentType(TypeFiles.getFileExtension(imageUrl));
                 }
@@ -89,14 +97,11 @@ public class AuthSuccessHandler implements AuthenticationSuccessHandler {
                 .httpOnly(true)
                 .secure(request.isSecure())
                 .path("/")
-                .maxAge(7 * 24 * 60 * 60)
+                .maxAge(Duration.ofDays(7))
                 .sameSite("Lax")
                 .build();
-        response.addHeader("Set-Cookie", cookie.toString());
-    }
 
-    private void setAuthHeaders(HttpServletResponse response, String jwt) {
-        response.addHeader("Authorization", "Bearer " + jwt);
+        response.addHeader("Set-Cookie", cookie.toString());
     }
 
     private void handleRedirect(HttpServletRequest request,
@@ -105,12 +110,42 @@ public class AuthSuccessHandler implements AuthenticationSuccessHandler {
 
         HttpSession session = request.getSession(false);
         if (session != null) {
-            DefaultSavedRequest savedRequest = (DefaultSavedRequest) session.getAttribute("SPRING_SECURITY_SAVED_REQUEST");
-            if (savedRequest != null && !savedRequest.getRequestURL().contains("/login")) {
-                redirectUrl = savedRequest.getRequestURL();
+            Object saved = session.getAttribute("SPRING_SECURITY_SAVED_REQUEST");
+            if (saved instanceof DefaultSavedRequest savedRequest) {
+                String savedUrl = savedRequest.getRedirectUrl();
+                String safe = sanitizeRedirectTarget(savedUrl);
+                if (safe != null) {
+                    redirectUrl = safe;
+                }
             }
         }
 
         redirectStrategy.sendRedirect(request, response, redirectUrl);
+    }
+
+    /**
+     * Ensure redirect targets are internal (prevent open-redirect).
+     * Returns path-only string (starting with "/") or null when not allowed.
+     */
+    private String sanitizeRedirectTarget(String candidate) {
+        if (candidate == null || candidate.isBlank()) return null;
+
+        try {
+            URI uri = URI.create(candidate);
+
+            if (uri.isAbsolute()) return null; // Only allow relative URLs
+
+            String path = uri.getPath();
+            if (path == null || !path.startsWith("/")) return null;
+
+            if (path.contains("\n") || path.contains("\r")) return null; // basic sanitation
+
+            String query = uri.getQuery();
+            return (query == null || query.isEmpty()) ? path : path + "?" + query;
+
+        } catch (Exception e) {
+            log.debug("Invalid saved redirect URL: {}", candidate);
+            return null;
+        }
     }
 }

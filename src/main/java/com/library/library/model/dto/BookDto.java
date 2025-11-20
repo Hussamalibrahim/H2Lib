@@ -1,6 +1,6 @@
 package com.library.library.model.dto;
 
-import com.library.library.model.enumerations.PublishStatus;
+import com.library.library.model.enumerations.*;
 import jakarta.persistence.Column;
 import jakarta.validation.constraints.*;
 import lombok.Data;

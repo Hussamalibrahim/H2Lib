@@ -28,11 +28,11 @@ import java.util.Map;
                 // Alternative: Use a database trigger or custom validation.
                 @UniqueConstraint(
                         name = "uk_username_key_role",
-                        columnNames = {"username_key", "id"} // Workaround: Use user_id to link to credentials
+                        columnNames = {"username_key", "user_id"} // Workaround: Use user_id to link to credentials
                 ),
                 @UniqueConstraint(
                         name = "uk_username_display_name_role",
-                        columnNames = {"username_display_name", "id"}
+                        columnNames = {"username_display_name", "user_id"}
                 )
         }
 )

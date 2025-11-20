@@ -1,12 +1,14 @@
 package com.library.library.security;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.library.library.security.interfaces.LoginAttemptTracker;
 import com.library.library.security.JWT.JwtService;
+import com.library.library.security.interfaces.LoginAttemptTracker;
 import jakarta.servlet.FilterChain;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -15,28 +17,25 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices;
 
 import java.io.IOException;
+import java.time.Duration;
 import java.util.Map;
-
+@Slf4j
 public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-
     private final JwtService jwtService;
-
     private final TokenBasedRememberMeServices rememberMeServices;
-
     private final LoginAttemptTracker loginAttemptService;
-
-
 
     public JsonUsernamePasswordAuthenticationFilter(AuthenticationManager authManager,
                                                     JwtService jwtService,
-                                                    TokenBasedRememberMeServices rememberMeServices, LoginAttemptTracker loginAttemptService) {
+                                                    TokenBasedRememberMeServices rememberMeServices,
+                                                    LoginAttemptTracker loginAttemptService) {
         super.setAuthenticationManager(authManager);
         this.jwtService = jwtService;
         this.rememberMeServices = rememberMeServices;
         this.setFilterProcessesUrl("/login-back");
-        this.loginAttemptService=loginAttemptService;
+        this.loginAttemptService = loginAttemptService;
     }
 
     @Override
@@ -44,10 +43,13 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
                                                 HttpServletResponse response) throws AuthenticationException {
         if (request.getContentType() != null && request.getContentType().contains("application/json")) {
             try {
-                Map<String, String> creds = objectMapper.readValue(request.getInputStream(), Map.class);
+                Map<String, String> creeds = objectMapper.readValue(
+                        request.getInputStream(), new TypeReference<>() {}
+                );
 
-                String username = creds.get("email");
-                String password = creds.get("password");
+                String username = creeds.getOrDefault("email", "").trim();
+                String password = creeds.getOrDefault("password", "");
+                if (password != null) password = password.trim();
 
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(username, password);
@@ -56,9 +58,10 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
                 return this.getAuthenticationManager().authenticate(authToken);
 
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Failed to parse authentication request body", e);
             }
         }
+
         return super.attemptAuthentication(request, response);
     }
 
@@ -67,6 +70,7 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
                                             HttpServletResponse response,
                                             FilterChain chain,
                                             Authentication authResult) throws IOException {
+
         UserPrincipalImp principal = (UserPrincipalImp) authResult.getPrincipal();
         String email = principal.getEmail();
 
@@ -77,30 +81,53 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
         String token = jwtService.generateToken(principal);
         principal.setJwtToken(token);
 
-        Cookie cookie = new Cookie("token", token);
-        cookie.setHttpOnly(true);
-        cookie.setPath("/");
-        cookie.setMaxAge(86400);
-        response.addCookie(cookie);
+        setAuthCookies(request, response, token);
 
         rememberMeServices.loginSuccess(request, response, authResult);
 
+        Map<String, Object> payload = Map.of(
+                "success", true,
+                "token", token,
+                "redirectUrl", "/"
+        );
         response.setContentType("application/json");
-        response.getWriter().write("{\"success\": true, \"token\": \"" + token + "\", \"redirectUrl\": \"/\"}");
+        response.setCharacterEncoding("UTF-8");
+        objectMapper.writeValue(response.getWriter(), payload);
+        response.getWriter().flush();
     }
 
     @Override
     protected void unsuccessfulAuthentication(HttpServletRequest request,
                                               HttpServletResponse response,
                                               AuthenticationException failed) throws IOException {
+
         String email = request.getParameter("email");
         if (email != null && loginAttemptService != null) {
             loginAttemptService.loginFailed(email);
         }
 
+        log.warn("Authentication failed for email {}: {}", email, failed.getMessage());
+
+        Map<String, Object> payload = Map.of(
+                "success", false,
+                "message", failed.getMessage()
+        );
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
-        response.getWriter().write("{\"success\": false, \"message\": \"" + failed.getMessage() + "\"}");
+        response.setCharacterEncoding("UTF-8");
+        objectMapper.writeValue(response.getWriter(), payload);
+        response.getWriter().flush();
     }
 
+    private void setAuthCookies(HttpServletRequest request, HttpServletResponse response, String token) {
+        ResponseCookie cookie = ResponseCookie.from("token", token)
+                .httpOnly(true)
+                .secure(request.isSecure())
+                .path("/")
+                .maxAge(Duration.ofDays(7))
+                .sameSite("Lax")
+                .build();
+
+        response.addHeader("Set-Cookie", cookie.toString());
+    }
 }

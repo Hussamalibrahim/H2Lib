@@ -4,7 +4,6 @@ import com.library.library.model.UserCredentials;
 import com.library.library.service.UserCredentialsService;
 import com.library.library.service.UserService;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -26,19 +25,19 @@ import org.springframework.web.client.RestTemplate;
 import java.util.Optional;
 @Slf4j
 @Service
-public class OAuth2UserService extends DefaultOAuth2UserService {
+public class OAuth2UserServiceImp extends DefaultOAuth2UserService {
 
-    @Autowired
-    private UserCredentialsService userCredentialsService;
+    private final UserCredentialsService userCredentialsService;
+    private final UserService userService;
+    private final UserPrincipal userPrincipal;
+    private final RestTemplate restTemplate;
 
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private UserPrincipal userPrincipal;
-
-    @Autowired
-    private RestTemplate restTemplate;
+    public OAuth2UserServiceImp(UserCredentialsService userCredentialsService, UserService userService, UserPrincipal userPrincipal, RestTemplate restTemplate) {
+        this.userCredentialsService = userCredentialsService;
+        this.userService = userService;
+        this.userPrincipal = userPrincipal;
+        this.restTemplate = restTemplate;
+    }
 
     @Override
     @Transactional
@@ -63,11 +62,9 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
 
     private Map<String, Object> fetchGitHubUserDetails(String accessToken) throws OAuth2AuthenticationException {
         try {
-            // Get primary email from GitHub
             HttpHeaders headers = new HttpHeaders();
             headers.set("Authorization", "token " + accessToken);
 
-            // First get user emails
             ResponseEntity<List<Map<String, Object>>> emailsResponse = restTemplate.exchange(
                     "https://api.github.com/user/emails",
                     HttpMethod.GET,
@@ -76,7 +73,6 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                     }
             );
 
-            // Find primary email
             String email = null;
             if (emailsResponse.getBody() != null) {
                 email = emailsResponse.getBody().stream()
@@ -86,7 +82,6 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
                         .orElseThrow(() -> new OAuth2AuthenticationException("No primary email found"));
             }
 
-            // Get user details
             ResponseEntity<Map<String, Object>> userResponse = restTemplate.exchange(
                     "https://api.github.com/user",
                     HttpMethod.GET,
@@ -130,7 +125,6 @@ public class OAuth2UserService extends DefaultOAuth2UserService {
         Users user = new Users();
         user.setDisplayName((String) attributes.get("name"));
 
-        // Handle profile picture
         if ("google".equals(provider)) {
             user.setImageUrl((String) attributes.get("picture"));
         } else if ("github".equals(provider)) {

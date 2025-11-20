@@ -8,7 +8,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 
 @Controller
 public class NotificationController {
-
     // this function to check the security
     @PreAuthorize("#notification.recipient.id == principal.id")
     @GetMapping("/notifications/{id}")
