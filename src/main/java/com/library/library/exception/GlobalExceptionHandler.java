@@ -43,20 +43,11 @@ import java.util.stream.Collectors;
 
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import static com.library.library.Utils.HtmlUtils.sanitize;
 
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    private String sanitize(String input) {
-        if (input == null) return "";
-        return input
-                .replace("&", "&amp;")
-                .replace("<", "&lt;")
-                .replace(">", "&gt;")
-                .replace("\"", "&quot;")
-                .replace("'", "&#39;")
-                .trim();
-    }
 
 
     private HttpHeaders buildSecureHeaders() {

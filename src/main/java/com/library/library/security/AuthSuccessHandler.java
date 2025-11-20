@@ -49,7 +49,6 @@ public class AuthSuccessHandler implements AuthenticationSuccessHandler {
                 || "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
 
         if (isAjax) {
-            // Return structured JSON
             Map<String, Object> payload = Map.of(
                     "success", true,
                     "token", jwt,
@@ -123,22 +122,18 @@ public class AuthSuccessHandler implements AuthenticationSuccessHandler {
         redirectStrategy.sendRedirect(request, response, redirectUrl);
     }
 
-    /**
-     * Ensure redirect targets are internal (prevent open-redirect).
-     * Returns path-only string (starting with "/") or null when not allowed.
-     */
     private String sanitizeRedirectTarget(String candidate) {
         if (candidate == null || candidate.isBlank()) return null;
 
         try {
             URI uri = URI.create(candidate);
 
-            if (uri.isAbsolute()) return null; // Only allow relative URLs
+            if (uri.isAbsolute()) return null;
 
             String path = uri.getPath();
             if (path == null || !path.startsWith("/")) return null;
 
-            if (path.contains("\n") || path.contains("\r")) return null; // basic sanitation
+            if (path.contains("\n") || path.contains("\r")) return null;
 
             String query = uri.getQuery();
             return (query == null || query.isEmpty()) ? path : path + "?" + query;

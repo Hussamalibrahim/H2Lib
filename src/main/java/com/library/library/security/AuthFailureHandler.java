@@ -1,6 +1,7 @@
 package com.library.library.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.library.library.Utils.HtmlUtils;
 import com.library.library.exception.infrastructure.AccountLockedException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -12,7 +13,7 @@ import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.authentication.AuthenticationFailureHandler;
 import org.springframework.stereotype.Component;
-import org.springframework.web.util.HtmlUtils;
+
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -68,15 +69,8 @@ public class AuthFailureHandler implements AuthenticationFailureHandler, Authent
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException {
-        String safeMessage = sanitize(authException.getMessage());
+        String safeMessage = HtmlUtils.sanitize(authException.getMessage());
         String encodedMessage = URLEncoder.encode("Authentication failed: " + safeMessage, StandardCharsets.UTF_8);
         redirectStrategy.sendRedirect(request, response, "/login?error=" + encodedMessage);
-    }
-
-    /**
-     * Remove potentially dangerous characters to prevent XSS.
-     */
-    private String sanitize(String input) {
-        return HtmlUtils.htmlEscape(input == null ? "" : input);
     }
 }

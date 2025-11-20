@@ -1,9 +1,10 @@
-package com.library.library.security;
+package com.library.library.security.securityFilter;
 
 import com.library.library.exception.infrastructure.AccountLockedException;
+import com.library.library.security.*;
 import com.library.library.security.JWT.JwtService;
 import com.library.library.security.interfaces.LoginAttemptTracker;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpStatus;
@@ -36,8 +37,10 @@ import java.time.temporal.ChronoUnit;
 
 @Configuration
 @EnableWebSecurity
+@AllArgsConstructor
 public class SecurityConfig {
 
+    private final CachedBodyFilter cachedBodyFilter;
     private final RememberMeProperties rememberMeProperties;
     private final UserDetailsService userDetailsService;
     private final CustomAuthFilter customAuthFilter;
@@ -45,16 +48,6 @@ public class SecurityConfig {
     private final LogoutService logoutService;
     private final OAuth2UserService<OAuth2UserRequest, OAuth2User> authUserService;
     private final LoginAttemptTracker loginAttemptService;
-
-    public SecurityConfig(RememberMeProperties rememberMeProperties, UserDetailsService userDetailsService, CustomAuthFilter customAuthFilter, JwtService jwtService, LogoutService logoutService, OAuth2UserService<OAuth2UserRequest, OAuth2User> authUserService, LoginAttemptTracker loginAttemptService) {
-        this.rememberMeProperties = rememberMeProperties;
-        this.userDetailsService = userDetailsService;
-        this.customAuthFilter = customAuthFilter;
-        this.jwtService = jwtService;
-        this.logoutService = logoutService;
-        this.authUserService = authUserService;
-        this.loginAttemptService = loginAttemptService;
-    }
 
 
     @Bean
@@ -187,6 +180,7 @@ public class SecurityConfig {
                         .key(rememberMeProperties.getSecretKey())
                         .tokenValiditySeconds(rememberMeProperties.getExpiration())
                 )
+                .addFilterBefore(cachedBodyFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterBefore(customAuthFilter, UsernamePasswordAuthenticationFilter.class)
                 .addFilterAt(jsonFilter(authManager), UsernamePasswordAuthenticationFilter.class)
                 .build();

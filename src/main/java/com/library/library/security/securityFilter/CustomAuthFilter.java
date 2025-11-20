@@ -1,6 +1,7 @@
-package com.library.library.security;
+package com.library.library.security.securityFilter;
 
 import com.library.library.security.JWT.JwtService;
+import com.library.library.security.UserPrincipal;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

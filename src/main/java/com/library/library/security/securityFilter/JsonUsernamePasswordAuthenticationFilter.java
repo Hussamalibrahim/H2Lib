@@ -1,8 +1,9 @@
-package com.library.library.security;
+package com.library.library.security.securityFilter;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.library.library.security.JWT.JwtService;
+import com.library.library.security.UserPrincipalImp;
 import com.library.library.security.interfaces.LoginAttemptTracker;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,6 +20,10 @@ import org.springframework.security.web.authentication.rememberme.TokenBasedReme
 import java.io.IOException;
 import java.time.Duration;
 import java.util.Map;
+import java.util.Objects;
+
+import static com.library.library.Utils.JsonRead.getJsonBody;
+
 @Slf4j
 public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
 
@@ -72,7 +77,9 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
                                             Authentication authResult) throws IOException {
 
         UserPrincipalImp principal = (UserPrincipalImp) authResult.getPrincipal();
-        String email = principal.getEmail();
+
+        Map<String, String> body = getJsonBody(request);
+        String email = body.get("email");
 
         if (loginAttemptService != null) {
             loginAttemptService.loginSucceeded(email);
@@ -101,22 +108,25 @@ public class JsonUsernamePasswordAuthenticationFilter extends UsernamePasswordAu
                                               HttpServletResponse response,
                                               AuthenticationException failed) throws IOException {
 
-        String email = request.getParameter("email");
+        Map<String, String> body = getJsonBody(request);
+        String email = body.get("email");
+
         if (email != null && loginAttemptService != null) {
             loginAttemptService.loginFailed(email);
         }
 
-        log.warn("Authentication failed for email {}: {}", email, failed.getMessage());
-
         Map<String, Object> payload = Map.of(
                 "success", false,
-                "message", failed.getMessage()
+                "message", failed.getMessage(),
+                "remainingAttempts",
+                email != null ? Objects.requireNonNull(loginAttemptService).getRemainingAttempts(email) : null, "lockedUntil",
+                Objects.requireNonNull(email != null ? loginAttemptService.getLockedUntil(email).orElse(null) : null)
         );
+
         response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
         objectMapper.writeValue(response.getWriter(), payload);
-        response.getWriter().flush();
     }
 
     private void setAuthCookies(HttpServletRequest request, HttpServletResponse response, String token) {

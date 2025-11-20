@@ -10,6 +10,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.library.library.Utils.HtmlUtils.sanitize;
+
 @Data
 public class ErrorResponseDto {
 
@@ -30,9 +32,6 @@ public class ErrorResponseDto {
         dto.path = sanitize(path);
         dto.message = sanitize(message);
         return dto;
-    }
-    private static String sanitize(String input) {
-        return HtmlUtils.htmlEscape(input == null ? "" : input);
     }
 
 }
