@@ -13,5 +13,7 @@ public class LoginRequest {
     @NotBlank(message = "Password is required")
     private String password;
 
+    private String targetUrl;
+
     private boolean rememberMe;
 }

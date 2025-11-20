@@ -27,14 +27,24 @@ public class AuthFailureHandler implements AuthenticationFailureHandler, Authent
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
 
-        log.info("\n\n\nuser come here\nn\n\n\n");
-        if (exception instanceof AccountLockedException lockedEx) {
-            handleLockedAccount(request, response, lockedEx);
-        } else if (exception instanceof OAuth2AuthenticationException oauthEx) {
-            handleOAuthFailure(request, response, oauthEx);
+        boolean isAjax = "XMLHttpRequest".equals(request.getHeader("X-Requested-With"));
+
+        if (isAjax) {
+            response.setContentType("application/json");
+            response.setCharacterEncoding("UTF-8");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.getWriter().write("{ rror\": \"" + exception.getMessage() + "\"}");
         } else {
-            handleGenericFailure(request, response, exception);
+
+
+            String errorMessage = URLEncoder.encode("Authentication failed: " + exception.getMessage(), StandardCharsets.UTF_8);
+            redirectStrategy.sendRedirect(request, response, "/login?error=" + errorMessage);
         }
+    }
+
+    private boolean isApiRequest(HttpServletRequest request) {
+        String path = request.getServletPath();
+        return path.equals("/login-back") || path.equals("/register-back");
     }
 
     private void handleLockedAccount(HttpServletRequest request,

@@ -59,6 +59,7 @@ public class GlobalExceptionHandler {
     public Object handleValidationErrors(MethodArgumentNotValidException ex,
                                          HttpServletRequest request,
                                          Model model) {
+
         Map<String, String> fieldErrors = ex.getBindingResult().getFieldErrors()
                 .stream()
                 .collect(Collectors.toMap(
@@ -183,7 +184,7 @@ public class GlobalExceptionHandler {
         // Nothing to do
     }
 
-    // 415 - Unsupported Media Type
+//     415 - Unsupported Media Type
     @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
     public Object handleMediaTypeNotSupported(HttpMediaTypeNotSupportedException ex,
                                               HttpServletRequest request,
@@ -200,7 +201,6 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(errorDto);
     }
-    // 423 - Locked Account handler
     // 423 - Locked Account handler
     @ExceptionHandler(AccountLockedException.class)
     public Object handleLockedAccount(AccountLockedException ex,
@@ -329,10 +329,8 @@ public class GlobalExceptionHandler {
 
 
     // Specify name of a specific view that will be used to display the error:
-    @ExceptionHandler({SQLException.class,DataAccessException.class})
-    public Object handleDatabaseErrors(  RuntimeException ex,
-                                                    HttpServletRequest request,
-                                                    Model model) {
+    @ExceptionHandler({SQLException.class, DataAccessException.class})
+    public Object handleDatabaseErrors(Exception ex, HttpServletRequest request, Model model) {
         ErrorResponseDto errorDto = ErrorResponseDto.create(
                 HttpStatus.INTERNAL_SERVER_ERROR,
                 request.getRequestURI(),
@@ -342,7 +340,7 @@ public class GlobalExceptionHandler {
             errorDto.addToModel(model);
             return "error/databaseError";
         }
-        return ResponseEntity.badRequest().body(errorDto);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorDto);
     }
 
     // File Upload Error

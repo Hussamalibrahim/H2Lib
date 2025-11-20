@@ -18,7 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Component
 @RequiredArgsConstructor
 @Transactional
-public class AdminInitService implements CommandLineRunner {
+public class AdminInitializer implements CommandLineRunner {
 
     private final UserCredentialsService userCredentialsService;
     private final UserService userService;

@@ -69,7 +69,8 @@ public class UserCredentials {
     @ElementCollection
     @CollectionTable(name = "user_providers", joinColumns = @JoinColumn(name = "user_id"))
     @Column(name = "provider")
-    private Set<String> providers = new HashSet<>();
+    private Set<String> providers
+            = new HashSet<>();
 
 
     public boolean isPermanentlyLocked() {

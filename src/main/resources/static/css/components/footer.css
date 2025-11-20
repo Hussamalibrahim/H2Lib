@@ -1,26 +1,26 @@
-/* css/components/footer.css */
+/* Make body a column flex container */
+body {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Full viewport height */
+    margin: 0; /* Remove default margin */
+}
+
+/* Main content grows to fill space */
+main {
+    flex: 1; /* Pushes footer down when content is short */
+}
+
+/* Footer styles */
 .footer {
     background: linear-gradient(135deg, var(--primary-color), var(--primary-dark));
     color: var(--light-color);
     padding: 20px 0;
     text-align: center;
-    position: fixed; /* Changed from relative to fixed */
-    bottom: 0; /* Stick to bottom */
-    left: 0;
-    right: 0;
-    z-index: 998;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
     transition: var(--transition);
 }
 
-/* Add this to your base.css or main layout CSS */
-body {
-    padding-bottom: 80px; /* Adjust this value based on your footer height */
-    min-height: 100vh;
-    position: relative;
-}
-
-/* The rest of your existing footer styles can remain the same */
 .footer .container {
     display: flex;
     justify-content: space-between;
@@ -53,6 +53,7 @@ body {
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+/* Responsive */
 @media (max-width: 768px) {
     .footer .container {
         flex-direction: column;
@@ -62,18 +63,4 @@ body {
     .footer-links {
         gap: 15px;
     }
-}/* Alternative for non-fixed but always-at-bottom footer */
- body {
-     display: flex;
-     flex-direction: column;
-     min-height: 100vh;
- }
-
- main {
-     flex: 1;
- }
-
- .footer {
-     /* Keep your existing styles but remove position: fixed */
-     margin-top: auto; /* Pushes footer to bottom */
- }
+}

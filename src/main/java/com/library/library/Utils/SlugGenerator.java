@@ -1,15 +1,15 @@
 package com.library.library.Utils;
 
-// this class to make key for authors and books
+// this class to make url-key for authors and books
 public class SlugGenerator{
 
     public static String createKeyWithId(String title, Long id) {
         String cleanTitle = title.toLowerCase()
-                .replaceAll("[^a-z0-9]", "-")  // Replace special chars
-                .replaceAll("-+", "-")         // Remove duplicate dashes
-                .replaceAll("^-|-$", "");      // Remove leading/trailing dashes
+                .replaceAll("[^a-z0-9]", "-")
+                .replaceAll("-+", "-")
+                .replaceAll("^-|-$", "");
 
-        return cleanTitle + "-" + id;  // "harry-potter-123"
+        return cleanTitle + "-" + id;
     }
     public static String createKey(String title) {
         return title.toLowerCase()
